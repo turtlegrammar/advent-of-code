@@ -64,9 +64,6 @@ public class Matrix<T>(T[][] array, T _null)
         ).ToList();
     }
 
-    public string GetStr((int, int) a, (int, int) b, (int, int) c, (int, int) d) =>
-        $"{Get(a)}{Get(b)}{Get(c)}{Get(d)}";
-
     public static Matrix<char> CharacterMatrixFromFile(string file, char _null) =>
         new Matrix<char>(File.ReadAllLines(file).Select(l => l.ToCharArray()).ToArray(), _null);
 }
