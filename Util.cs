@@ -12,18 +12,21 @@ public static class Extensions
         String.Join(join, coll.Select(x => x.ToString()));
 
     public static T[] EnumValues<T>() => (T[]) Enum.GetValues(typeof(T));
+
+    public static (T, T) ToTuple2<T>(this IEnumerable<T> coll) 
+    {
+        var arr = coll.ToArray();
+        return (arr[0], arr[1]);
+    }
+
+    public static (List<T> True, List<T> False) Partition<T>(this IEnumerable<T> coll, Func<T, bool> predicate) =>
+        (coll.Where(predicate).ToList(), coll.Where(x => !predicate(x)).ToList());
 }
 
 public enum MatrixDirection
 {
-    Up,
-    UpDiagRight,
-    Right,
-    DownDiagRight,
-    Down,
-    DownDiagLeft,
-    Left,
-    UpDiagLeft
+    Up, UpRight, Right, DownRight,
+    Down, DownLeft, Left, UpLeft
 }
 
 public class Matrix<T>(T[][] array, T _null)
@@ -50,13 +53,13 @@ public class Matrix<T>(T[][] array, T _null)
         var (rowDir, colDir) = dir switch
         {
             MatrixDirection.Up => (-1, 0),
-            MatrixDirection.UpDiagRight => (-1, 1),
+            MatrixDirection.UpRight => (-1, 1),
             MatrixDirection.Right => (0, 1),
-            MatrixDirection.DownDiagRight => (1, 1),
+            MatrixDirection.DownRight => (1, 1),
             MatrixDirection.Down => (1, 0),
-            MatrixDirection.DownDiagLeft => (1, -1),
+            MatrixDirection.DownLeft => (1, -1),
             MatrixDirection.Left => (0, -1),
-            MatrixDirection.UpDiagLeft => (-1, -1)
+            MatrixDirection.UpLeft => (-1, -1)
         };
 
         return Enumerable.Range(0, length).Select(i => 

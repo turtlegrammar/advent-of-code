@@ -40,10 +40,10 @@ public static class Day4
         List<string> GetDirectionalStrings(int row, int col)
         {
             return List(
-                matrix.GetSeq((row-1, col-1), MatrixDirection.DownDiagRight, 3).StrJoin(),
-                matrix.GetSeq((row-1, col+1), MatrixDirection.DownDiagLeft, 3).StrJoin(),
-                matrix.GetSeq((row+1, col-1), MatrixDirection.UpDiagRight, 3).StrJoin(),
-                matrix.GetSeq((row+1, col+1), MatrixDirection.UpDiagLeft, 3).StrJoin()
+                matrix.GetSeq((row-1, col-1), MatrixDirection.DownRight, 3).StrJoin(),
+                matrix.GetSeq((row-1, col+1), MatrixDirection.DownLeft, 3).StrJoin(),
+                matrix.GetSeq((row+1, col-1), MatrixDirection.UpRight, 3).StrJoin(),
+                matrix.GetSeq((row+1, col+1), MatrixDirection.UpLeft, 3).StrJoin()
             );
         }
     }
