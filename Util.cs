@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Collections.Generic;
+using static Advent.Extensions;
 
 namespace Advent;
 
@@ -21,12 +22,33 @@ public static class Extensions
 
     public static (List<T> True, List<T> False) Partition<T>(this IEnumerable<T> coll, Func<T, bool> predicate) =>
         (coll.Where(predicate).ToList(), coll.Where(x => !predicate(x)).ToList());
+
+    public static (int, int) Add(this (int, int) x, (int, int) y) =>
+        (x.Item1 + y.Item1, x.Item2 + y.Item2);
 }
 
-public enum MatrixDirection
+public static class Direction
 {
-    Up, UpRight, Right, DownRight,
-    Down, DownLeft, Left, UpLeft
+    public static (int, int) Up => (-1, 0);
+    public static (int, int) UpRight => (-1, 1);
+    public static (int, int) Right => (0, 1);
+    public static (int, int) DownRight => (1, 1);
+    public static (int, int) Down => (1, 0);
+    public static (int, int) DownLeft => (1, -1);
+    public static (int, int) Left => (0, -1);
+    public static (int, int) UpLeft => (-1, -1);
+
+    public static List<(int, int)> Directions => 
+        List(Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft);
+
+    public static (int, int) TurnRight(this (int, int) direction) =>
+        direction switch 
+        {
+            (-1, 0) => Right,
+            (0, 1) => Down,
+            (1, 0) => Left,
+            (0, -1) => Up
+        };
 }
 
 public class Matrix<T>(T[][] array, T _null)
@@ -48,19 +70,18 @@ public class Matrix<T>(T[][] array, T _null)
         : ij.Item2 >= array[ij.Item1].Length ? _null
         : array[ij.Item1][ij.Item2];
 
-    public List<T> GetSeq((int, int) start, MatrixDirection dir, int length) 
+    public T this[(int, int) index]
     {
-        var (rowDir, colDir) = dir switch
-        {
-            MatrixDirection.Up => (-1, 0),
-            MatrixDirection.UpRight => (-1, 1),
-            MatrixDirection.Right => (0, 1),
-            MatrixDirection.DownRight => (1, 1),
-            MatrixDirection.Down => (1, 0),
-            MatrixDirection.DownLeft => (1, -1),
-            MatrixDirection.Left => (0, -1),
-            MatrixDirection.UpLeft => (-1, -1)
-        };
+        get { return Get(index); }
+        set { array[index.Item1][index.Item2] = value; }
+    }
+
+    public (int, int) IndexOf(T item) =>
+        array.Select((a, row) => (row, Array.IndexOf(array[row], item))).Single(tup => tup.Item2 != -1);
+
+    public List<T> GetSeq((int, int) start, (int, int) dir, int length) 
+    {
+        var (rowDir, colDir) = dir; 
 
         return Enumerable.Range(0, length).Select(i => 
             Get((start.Item1 + rowDir * i, start.Item2 + colDir * i))

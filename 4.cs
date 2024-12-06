@@ -19,7 +19,7 @@ public static class Day4
         return count;
 
         List<string> GetDirectionalStrings(int row, int col) =>
-            EnumValues<MatrixDirection>().Select(dir => 
+            Direction.Directions.Select(dir => 
                 matrix.GetSeq((row, col), dir, 4).StrJoin()
             ).ToList();
     }
@@ -40,10 +40,10 @@ public static class Day4
         List<string> GetDirectionalStrings(int row, int col)
         {
             return List(
-                matrix.GetSeq((row-1, col-1), MatrixDirection.DownRight, 3).StrJoin(),
-                matrix.GetSeq((row-1, col+1), MatrixDirection.DownLeft, 3).StrJoin(),
-                matrix.GetSeq((row+1, col-1), MatrixDirection.UpRight, 3).StrJoin(),
-                matrix.GetSeq((row+1, col+1), MatrixDirection.UpLeft, 3).StrJoin()
+                matrix.GetSeq((row-1, col-1), Direction.DownRight, 3).StrJoin(),
+                matrix.GetSeq((row-1, col+1), Direction.DownLeft, 3).StrJoin(),
+                matrix.GetSeq((row+1, col-1), Direction.UpRight, 3).StrJoin(),
+                matrix.GetSeq((row+1, col+1), Direction.UpLeft, 3).StrJoin()
             );
         }
     }
