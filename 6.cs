@@ -53,6 +53,7 @@ public static class Day6
          map[guardPoint] = EMPTY;
 
          var obstacles = 0;
+         var (visitCount, _) = Walk(guardPoint, map);
 
          map.ForEach((row, col, square) => {
             if (square != OBSTACLE && (row, col) != guardPoint)
@@ -67,7 +68,7 @@ public static class Day6
             }
          });
 
-         return (41, obstacles);
+         return (visitCount, obstacles);
     }
 
     // public static (int, int) Run(string file)
