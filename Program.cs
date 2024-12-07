@@ -1,4 +1,4 @@
 ﻿using Advent;
 
 // See https://aka.ms/new-console-template for more information
-Console.WriteLine(Day6.Run("inputs/day-6.txt"));
+Console.WriteLine(Day7.Run("/home/coder/code/advent-of-code/inputs/day-7.txt"));

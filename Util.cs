@@ -14,6 +14,9 @@ public static class Extensions
 
     public static T[] EnumValues<T>() => (T[]) Enum.GetValues(typeof(T));
 
+    public static List<T> ReverseList<T>(this List<T> coll) =>
+        coll.Select(x => x).Reverse().ToList();
+
     public static (T, T) ToTuple2<T>(this IEnumerable<T> coll) 
     {
         var arr = coll.ToArray();
