@@ -23,11 +23,35 @@ public static class Extensions
         return (arr[0], arr[1]);
     }
 
+    public static (int, int) ManhattanDistance(this (int, int) x, (int, int) y) =>
+        (x.Item1 - y.Item1, x.Item2 - y.Item2);
+
     public static (List<T> True, List<T> False) Partition<T>(this IEnumerable<T> coll, Func<T, bool> predicate) =>
         (coll.Where(predicate).ToList(), coll.Where(x => !predicate(x)).ToList());
 
     public static (int, int) Add(this (int, int) x, (int, int) y) =>
         (x.Item1 + y.Item1, x.Item2 + y.Item2);
+
+    public static (int, int) Subtract(this (int, int) x, (int, int) y) =>
+        (x.Item1 - y.Item1, x.Item2 - y.Item2);
+
+    public static IEnumerable<(T, T)> OrderedPairs<T>(this IEnumerable<T> coll)
+    {
+        var list = coll.ToList();
+        for (int i = 0; i < list.Count; i++)
+            for (int j = i + 1; j < list.Count; j++)
+                yield return (list[i], list[j]);
+    }
+
+    public static IEnumerable<T> IterativeSeq<T>(T seed, Func<T, T> next)
+    {
+        var x = seed;
+        while (true)
+        {
+            yield return x;
+            x = next(x);
+        }
+    }
 }
 
 public static class Direction
@@ -62,6 +86,9 @@ public class Matrix<T>(T[][] array, T _null)
             for (int j = 0; j < array[i].Length; j++)
                 f(i, j, array[i][j]);
     }
+
+    public IEnumerable<R> Select<R>(Func<int, int, T, R> f) =>
+        array.SelectMany((sub, row) => sub.Select((x, col) => f(row, col, x)));
 
     public T Get(int i, int j) =>
         Get((i, j));
