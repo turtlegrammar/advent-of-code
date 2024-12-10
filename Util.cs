@@ -35,6 +35,14 @@ public static class Extensions
     public static (int, int) Subtract(this (int, int) x, (int, int) y) =>
         (x.Item1 - y.Item1, x.Item2 - y.Item2);
 
+    public static List<(int, int)> Adjacent4(this (int, int) x) =>
+        List(
+            x.Add(Direction.Up),
+            x.Add(Direction.Right),
+            x.Add(Direction.Down),
+            x.Add(Direction.Left)
+        );
+
     public static IEnumerable<(T, T)> OrderedPairs<T>(this IEnumerable<T> coll)
     {
         var list = coll.ToList();
@@ -52,6 +60,15 @@ public static class Extensions
             x = next(x);
         }
     }
+
+    public static Option<T> Some<T>(T value) => new Option<T>.Some(value);
+    public static Option<T> None<T>() => new Option<T>.None();
+}
+
+public record Option<T>
+{
+    public record Some(T Value): Option<T>;
+    public record None: Option<T>;
 }
 
 public static class Direction
@@ -90,6 +107,16 @@ public class Matrix<T>(T[][] array, T _null)
     public IEnumerable<R> Select<R>(Func<int, int, T, R> f) =>
         array.SelectMany((sub, row) => sub.Select((x, col) => f(row, col, x)));
 
+    public IEnumerable<R> SelectWhere<R>(Func<int, int, T, Option<R>> f)
+    {
+        var result = new List<R>();
+        this.ForEach((row, col, x) => {
+            if (f(row, col, x) is Option<R>.Some s)
+                result.Add(s.Value);
+        });
+        return result;
+    }
+
     public T Get(int i, int j) =>
         Get((i, j));
 
@@ -120,4 +147,7 @@ public class Matrix<T>(T[][] array, T _null)
 
     public static Matrix<char> CharacterMatrixFromFile(string file, char _null) =>
         new Matrix<char>(File.ReadAllLines(file).Select(l => l.ToCharArray()).ToArray(), _null);
+
+    public static Matrix<int> IntegerMatrixFromFile(string file, int _null) =>
+        new Matrix<int>(File.ReadAllLines(file).Select(l => l.ToCharArray().Select(c => c - '0').ToArray()).ToArray(), _null);
 }
