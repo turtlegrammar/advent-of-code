@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using static Advent.Extensions;
+using System.Text.RegularExpressions;
 
 namespace Advent;
 
@@ -150,4 +151,13 @@ public class Matrix<T>(T[][] array, T _null)
 
     public static Matrix<int> IntegerMatrixFromFile(string file, int _null) =>
         new Matrix<int>(File.ReadAllLines(file).Select(l => l.ToCharArray().Select(c => c - '0').ToArray()).ToArray(), _null);
+}
+
+public static class Parse
+{
+    public static int[] IntArray(string file) =>
+        new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
+
+    public static long[] LongArray(string file) =>
+        new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
 }
