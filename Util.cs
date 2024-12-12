@@ -64,6 +64,15 @@ public static class Extensions
 
     public static Option<T> Some<T>(T value) => new Option<T>.Some(value);
     public static Option<T> None<T>() => new Option<T>.None();
+
+    public static T AddSet<K, T>(this Dictionary<K, HashSet<T>> dict, K key, T val)
+    {
+        if (dict.TryGetValue(key, out var set))
+            set.Add(val);
+        else
+            dict[key] = new HashSet<T> { val };
+        return val;
+    }
 }
 
 public record Option<T>
