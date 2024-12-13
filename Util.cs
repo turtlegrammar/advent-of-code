@@ -36,6 +36,12 @@ public static class Extensions
     public static (int, int) Subtract(this (int, int) x, (int, int) y) =>
         (x.Item1 - y.Item1, x.Item2 - y.Item2);
 
+    public static (long, long) Add(this (long, long) x, (long, long) y) =>
+        (x.Item1 + y.Item1, x.Item2 + y.Item2);
+
+    public static (long, long) Subtract(this (long, long) x, (long, long) y) =>
+        (x.Item1 - y.Item1, x.Item2 - y.Item2);
+
     public static List<(int, int)> Adjacent4(this (int, int) x) =>
         List(
             x.Add(Direction.Up),
@@ -166,6 +172,9 @@ public static class Parse
 {
     public static int[] IntArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
+
+    public static int[][] IntArrayLines(string file) =>
+        File.ReadAllLines(file).Select(line => new Regex("([0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
 
     public static long[] LongArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
