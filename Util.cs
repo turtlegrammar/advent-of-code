@@ -42,6 +42,9 @@ public static class Extensions
     public static (long, long) Subtract(this (long, long) x, (long, long) y) =>
         (x.Item1 - y.Item1, x.Item2 - y.Item2);
 
+    public static T X<T>(this (T, T) tup) => tup.Item1;
+    public static T Y<T>(this (T, T) tup) => tup.Item2;
+
     public static List<(int, int)> Adjacent4(this (int, int) x) =>
         List(
             x.Add(Direction.Up),
@@ -174,7 +177,7 @@ public static class Parse
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
 
     public static int[][] IntArrayLines(string file) =>
-        File.ReadAllLines(file).Select(line => new Regex("([0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
+        File.ReadAllLines(file).Select(line => new Regex("(-{0,1}[0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
 
     public static long[] LongArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
