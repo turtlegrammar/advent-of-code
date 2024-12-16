@@ -237,3 +237,52 @@ public static class Parse
     public static long[] LongArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
 }
+
+public static class Algorithms
+{
+        // adapted from https://stackoverflow.com/a/77917268
+        public static (Dictionary<T, long> costs, Dictionary<T, HashSet<T>> parents) ShortestPathsFrom<T>(
+            T start,
+            Dictionary<T, Dictionary<T, long>> neighbors)
+        {
+            var visited = new HashSet<T>();
+            var costs = new Dictionary<T, long>() { };
+            var parents = new Dictionary<T, HashSet<T>>();
+            var queue = new PriorityQueue<T, long>();
+
+            costs = neighbors[start].ToDictionary(x => x.Key, x => x.Value);
+            foreach (var c in costs)
+                queue.Enqueue(c.Key, c.Value);
+
+            while (queue.TryDequeue(out var lowestCostNode, out var _))
+            {
+                // visisted seems to not be necessary, but does speed it up some
+                if (!visited.Contains(lowestCostNode))
+                {
+                    var cost = costs[lowestCostNode];
+                    var ns = neighbors[lowestCostNode];
+                    foreach (var (neighbor, costToNeighbor) in ns)
+                    {
+                        var newCost = cost + costToNeighbor;
+                        // the = case doesn't update the cost but it does add a new parent
+                        if (!costs.ContainsKey(neighbor) || newCost <= costs[neighbor]) 
+                        {
+                            costs[neighbor] = newCost;
+                            // we never need to update https://github.com/dotnet/runtime/issues/44871#issuecomment-2039292354
+                            queue.Enqueue(neighbor, newCost);
+                            parents.AddSet(neighbor, lowestCostNode);
+                        }
+                    }
+
+                    visited.Add(lowestCostNode);
+                }
+            }
+
+            return (costs, parents);
+        }
+
+        public static HashSet<T> NodesAlongShortestPathsToNode<T>(Dictionary<T, HashSet<T>> parents, T node) =>
+            parents.TryGetValue(node, out var ps)
+            ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
+            : new HashSet<T> { node };
+}
