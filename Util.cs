@@ -86,6 +86,15 @@ public static class Extensions
             dict[key] = new HashSet<T> { val };
         return val;
     }
+
+    public static V AddDict<K, T, V>(this Dictionary<K, Dictionary<T, V>> dict, K key, T key2, V val)
+    {
+        if (dict.TryGetValue(key, out var d))
+            return d[key2] = val;
+        else
+            dict[key] = new Dictionary<T, V> { {key2, val } };
+        return val;
+    }
 }
 
 public record Option<T>
@@ -108,6 +117,9 @@ public static class Direction
     public static List<(int, int)> Directions => 
         List(Up, UpRight, Right, DownRight, Down, DownLeft, Left, UpLeft);
 
+    public static List<(int, int)> CardinalDirections => 
+        List(Up,  Right,  Down,  Left);
+
     public static (int, int) TurnRight(this (int, int) direction) =>
         direction switch 
         {
@@ -116,6 +128,9 @@ public static class Direction
             (1, 0) => Left,
             (0, -1) => Up
         };
+
+    public static (int, int) TurnLeft(this (int, int) direction) =>
+        direction.TurnRight().TurnRight().TurnRight();
 }
 
 public class Matrix<T>(T[][] array, T _null)

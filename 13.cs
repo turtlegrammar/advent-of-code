@@ -25,7 +25,7 @@ public static class Day13
             var a = (claw.Prize.Item1 - claw.BButton.Item1 * b)/claw.AButton.Item1;
             var a2 = (claw.Prize.Item2 - claw.BButton.Item2*b) /claw.AButton.Item2;
             return a == a2 && a >= 0 && b >= 0 
-                // I'm not sure why this check is necessary but it is
+                // This check is necessary because we may have lost precision with integer division above
                 && a * claw.AButton.Item1 + b * claw.BButton.Item1 == claw.Prize.Item1
                 && a * claw.AButton.Item2 + b * claw.BButton.Item2 == claw.Prize.Item2
                 ? (a, b) 
