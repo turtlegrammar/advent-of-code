@@ -2,6 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using static Advent.Extensions;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Advent;
 
@@ -32,6 +33,9 @@ public static class Extensions
 
     public static (int, int) Add(this (int, int) x, (int, int) y) =>
         (x.Item1 + y.Item1, x.Item2 + y.Item2);
+
+    public static (int, int) Multiply(this (int, int) x, int scalar) =>
+        (x.Item1 * scalar, x.Item2 * scalar);
 
     public static (int, int) Subtract(this (int, int) x, (int, int) y) =>
         (x.Item1 - y.Item1, x.Item2 - y.Item2);
@@ -116,6 +120,8 @@ public static class Direction
 
 public class Matrix<T>(T[][] array, T _null)
 {
+    public T[][] Array => array;
+
     public void ForEach(Action<int, int, T> f)
     {
         for (int i = 0; i < array.Length; i++)
@@ -153,7 +159,7 @@ public class Matrix<T>(T[][] array, T _null)
     }
 
     public (int, int) IndexOf(T item) =>
-        array.Select((a, row) => (row, Array.IndexOf(array[row], item))).Single(tup => tup.Item2 != -1);
+        array.Select((a, row) => (row, System.Array.IndexOf(array[row], item))).Single(tup => tup.Item2 != -1);
 
     public List<T> GetSeq((int, int) start, (int, int) dir, int length) 
     {
@@ -164,11 +170,45 @@ public class Matrix<T>(T[][] array, T _null)
         ).ToList();
     }
 
+    public IEnumerable<T> GetSeq((int, int) start, (int, int) dir) =>
+        IterativeSeq(start, n => n.Add(dir)).Select(Get);
+
     public static Matrix<char> CharacterMatrixFromFile(string file, char _null) =>
         new Matrix<char>(File.ReadAllLines(file).Select(l => l.ToCharArray()).ToArray(), _null);
 
+    public static Matrix<char> CharacterMatrixFromString(string str, char _null) =>
+        new Matrix<char>(str.Split("\n").Select(l => l.ToCharArray()).ToArray(), _null);
+
     public static Matrix<int> IntegerMatrixFromFile(string file, int _null) =>
         new Matrix<int>(File.ReadAllLines(file).Select(l => l.ToCharArray().Select(c => c - '0').ToArray()).ToArray(), _null);
+
+    public void Write(string file)
+    {
+        var sb = new StringBuilder();
+
+        for (int x = 0; x < array.Length; x++)
+        {
+            for (int y = 0; y < array[0].Length; y++)
+                sb.Append(Get(x, y));
+            sb.Append("\n");
+        }
+
+        File.WriteAllText(file, sb.ToString());
+    }
+
+    public void Append(string file)
+    {
+        var sb = new StringBuilder();
+
+        for (int x = 0; x < array.Length; x++)
+        {
+            for (int y = 0; y < array[0].Length; y++)
+                sb.Append(Get(x, y));
+            sb.Append("\n");
+        }
+
+        File.AppendAllText(file, sb.ToString());
+    }
 }
 
 public static class Parse

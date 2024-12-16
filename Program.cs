@@ -1,17 +1,19 @@
 ﻿using Advent;
 
+Console.WriteLine(Day15.Run("/home/coder/code/advent-of-code/inputs/day-15.txt"));
+
 // See https://aka.ms/new-console-template for more information
-var day14 = new Day14(101, 103, "/home/coder/code/advent-of-code/inputs/day-14.txt");
-var day14demo = new Day14(11, 7, "/home/coder/code/advent-of-code/inputs/day-14-demo.txt");
+// var day14 = new Day14(101, 103, "/home/coder/code/advent-of-code/inputs/day-14.txt");
+// var day14demo = new Day14(11, 7, "/home/coder/code/advent-of-code/inputs/day-14-demo.txt");
 
-    // day14.Write("robots.txt");
-    // day14.AdvanceUntilMiddleOccupied();
-    // day14.Write("robots.txt");
+//     // day14.Write("robots.txt");
+//     // day14.AdvanceUntilMiddleOccupied();
+//     // day14.Write("robots.txt");
 
-// day14.Advance(101 * 103);
-// Console.WriteLine(day14.RunToSafetyFactor.MinBy(kvp => kvp.Value));
-day14.Advance(6377);
-day14.Write("robots.txt");
+// // day14.Advance(101 * 103);
+// // Console.WriteLine(day14.RunToSafetyFactor.MinBy(kvp => kvp.Value));
+// day14.Advance(6377);
+// day14.Write("robots.txt");
 
 
 // day14.Write("robots.txt");

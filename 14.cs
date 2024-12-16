@@ -46,7 +46,6 @@ public class Day14
 
     public void Write(string file)
     {
-        var grid = new char[_width,_height];
         var sb = new StringBuilder();
         var positions = _robots.GroupBy(r => r.Position).ToDictionary(g => g.Key, g => g.Count());
         sb.Append(_time.ToString() + "\n");
