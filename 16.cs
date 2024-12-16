@@ -31,18 +31,15 @@ public static class Day16
         }
 
         var (finalCosts, parents) = ShortestPaths(new Node(startPoint, startDirection), neighbors);
-        var endNodes = List(
-            new Node(endPoint, Direction.Left),
-            new Node(endPoint, Direction.Right),
-            new Node(endPoint, Direction.Down),
-            new Node(endPoint, Direction.Up)
-        );
 
-        var finishNode = endNodes.MinBy(n => finalCosts[n]);
+        var finishNode = List(
+            new Node(endPoint, Direction.Left), new Node(endPoint, Direction.Right),
+            new Node(endPoint, Direction.Down), new Node(endPoint, Direction.Up)
+        ).MinBy(n => finalCosts[n]);
 
-        var nodesAlongShortestPath = NodesAlongShortestPathsToNode(parents, finishNode).Select(n => n.Coordinate).ToHashSet();
+        var coordinatesAlongShortestPath = NodesAlongShortestPathsToNode(parents, finishNode).Select(n => n.Coordinate).ToHashSet();
 
-        return (finalCosts[finishNode], nodesAlongShortestPath.Count);
+        return (finalCosts[finishNode], coordinatesAlongShortestPath.Count);
 
         // adapted from https://stackoverflow.com/a/77917268
         (Dictionary<Node, long> costs, Dictionary<Node, HashSet<Node>> parents) ShortestPaths(
