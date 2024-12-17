@@ -1,6 +1,12 @@
 ﻿using Advent;
 
-Console.WriteLine(Day16.Run("/home/coder/code/advent-of-code/inputs/day-16.txt"));
+Console.WriteLine(Day17.Run("/home/coder/code/advent-of-code/inputs/day-17.txt"));
+
+while (true)
+{
+    var a = Console.ReadLine();
+    Console.WriteLine(Day17.Run("/home/coder/code/advent-of-code/inputs/day-17.txt", a));
+}
 
 // See https://aka.ms/new-console-template for more information
 // var day14 = new Day14(101, 103, "/home/coder/code/advent-of-code/inputs/day-14.txt");
