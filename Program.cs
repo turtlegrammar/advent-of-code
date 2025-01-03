@@ -1,3 +1,3 @@
 ﻿using Advent;
 
-Console.WriteLine(Day18.Run("/home/coder/code/advent-of-code/inputs/day-18.txt"));
+Console.WriteLine(Day19.Run("/home/coder/code/advent-of-code/inputs/day-19.txt"));
