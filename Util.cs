@@ -195,6 +195,9 @@ public class Matrix<T>(T[][] array, T _null)
     public static Matrix<int> IntegerMatrixFromFile(string file, int _null) =>
         new Matrix<int>(File.ReadAllLines(file).Select(l => l.ToCharArray().Select(c => c - '0').ToArray()).ToArray(), _null);
 
+    public static Matrix<T> Create(T seed, T _null, int rows, int cols) =>
+        new Matrix<T>(Enumerable.Range(0, rows).Select(_ => Enumerable.Range(0, cols).Select(_ => seed).ToArray()).ToArray(), _null);
+
     public void Write(string file)
     {
         var sb = new StringBuilder();
