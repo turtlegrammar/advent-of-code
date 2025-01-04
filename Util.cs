@@ -8,6 +8,9 @@ public static class Extensions
 {
     public static List<T> List<T>(params T[] xs) =>
         xs.ToList();
+    
+    public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) =>
+        kvs.ToDictionary();
 
     public static string StrJoin<T>(this IEnumerable<T> coll, string join = "") =>
         String.Join(join, coll.Select(x => x.ToString()));
@@ -231,6 +234,12 @@ public class Matrix<T>(T[][] array, T _null)
 
 public static class Parse
 {
+    public static int Int(string s) =>
+        new Regex("([0-9]+)").Matches(s).Select(v => Int32.Parse(v.Value)).ToArray()[0];
+
+    public static long Long(string s) =>
+        new Regex("([0-9]+)").Matches(s).Select(v => Int64.Parse(v.Value)).ToArray()[0];
+
     public static int[] IntArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
 
@@ -288,4 +297,22 @@ public static class Algorithms
         parents.TryGetValue(node, out var ps)
         ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
         : new HashSet<T> { node };
+
+    public static List<List<T>> EnumeratePaths<T>(Dictionary<T, HashSet<T>> parents, T node)
+    {
+        if (parents.TryGetValue(node, out var ps))
+        {
+            var parentPaths = ps.SelectMany(p => EnumeratePaths(parents, p)).ToList();
+            return parentPaths.Select(path => path.Concat(List(node)).ToList()).ToList();
+        }
+        else
+        {
+            return List(List(node));
+        }
+    }
+        // parents.TryGetValue(node, out var ps)
+        // // ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
+        // ? ps.Select(p => List(node, p).Concat(Enumer))
+        // : List(List(node))
+
 }
