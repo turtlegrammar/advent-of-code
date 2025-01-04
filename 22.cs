@@ -5,8 +5,6 @@ using static Advent.Extensions;
 
 public static class Day22
 {
-    public const char EMPTY = '.'; public const char WALL = '#';
-
     public static (long, long) Run(string file)
     {
         var input = Parse.LongArray(file);

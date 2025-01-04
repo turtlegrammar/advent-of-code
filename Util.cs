@@ -12,6 +12,12 @@ public static class Extensions
     public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) =>
         kvs.ToDictionary();
 
+    public static void ForEach<T>(this T[] arr, Action<T> f)
+    {
+        foreach (var x in arr)
+            f(x);
+    }
+
     public static List<string> KeepSmallest(this IEnumerable<string> colls)
     {
         if (colls.Count() == 0)
@@ -105,6 +111,20 @@ public static class Extensions
         else
             dict[key] = new Dictionary<T, V> { {key2, val } };
         return val;
+    }
+
+    public static (T, T, T) Order<T>(this (T, T, T) tup)
+    {
+        var coll = new List<T> { tup.Item1, tup.Item2, tup.Item3 };
+        coll.Sort();
+        return (coll[0], coll[1], coll[2]);
+    }
+
+    public static (T, T) Order<T>(this (T, T) tup)
+    {
+        var coll = new List<T> { tup.Item1, tup.Item2 };
+        coll.Sort();
+        return (coll[0], coll[1]);
     }
 }
 
@@ -256,6 +276,9 @@ public static class Parse
 
     public static long[] LongArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
+    
+    public static string[][] AlphanumLines(string file) =>
+        File.ReadAllLines(file).Select(line => new Regex("([a-zA-Z0-9]+)").Matches(line).Select(v => v.Value).ToArray()).ToArray();
 }
 
 public static class Algorithms
@@ -322,5 +345,17 @@ public static class Algorithms
         // // ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
         // ? ps.Select(p => List(node, p).Concat(Enumer))
         // : List(List(node))
+}
 
+public class Graph<T>
+{
+    public HashSet<T> Nodes = new HashSet<T>();
+    public Dictionary<T, HashSet<T>> Connections = new Dictionary<T, HashSet<T>>();
+
+    public void BidirectionallyConnect(T n1, T n2)
+    {
+        Nodes.Add(n1); Nodes.Add(n2);
+        Connections.AddSet(n1, n2);
+        Connections.AddSet(n2, n1);
+    }
 }
