@@ -13,7 +13,6 @@ public static class Day19
         var patterns = lines.Skip(2).ToList();
 
         var cache = new Dictionary<string, long>(); 
-        // atoms.ToDictionary(a => a, _ => 1);
 
         var waysToBuild = patterns.Select(WaysToBuild).ToList();
 
