@@ -37,14 +37,14 @@ public static class Day8
 
          List<(int, int)> Antinodes1((int, int) x, (int, int) y)
          {
-            var diff = x.ManhattanDistance(y);
+            var diff = x.Subtract(y);
             return List(x.Subtract(diff), x.Add(diff), y.Subtract(diff), y.Add(diff))
                 .Where(t => t != x && t != y && map.Get(t) != NULL).ToList();
          }
 
          HashSet<(int, int)> Antinodes2((int, int) x, (int, int) y)
          {
-            var diff = x.ManhattanDistance(y);
+            var diff = x.Subtract(y);
 
             return IterativeSeq(x, p => p.Subtract(diff)).TakeWhile(p => map.Get(p) != NULL)
                 .Concat(IterativeSeq(x, p => p.Add(diff)).TakeWhile(p => map.Get(p) != NULL))

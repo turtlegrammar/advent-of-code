@@ -23,8 +23,10 @@ public static class Extensions
         return (arr[0], arr[1]);
     }
 
-    public static (int, int) ManhattanDistance(this (int, int) x, (int, int) y) =>
-        (x.Item1 - y.Item1, x.Item2 - y.Item2);
+    public static int ManhattanDistance(this (int, int) x, (int, int) y) =>
+        Math.Abs(x.Item1 - y.Item1) + Math.Abs(x.Item2 - y.Item2);
+
+    public static int Sum(this (int, int) x) => x.Item1 + x.Item2;
 
     public static (List<T> True, List<T> False) Partition<T>(this IEnumerable<T> coll, Func<T, bool> predicate) =>
         (coll.Where(predicate).ToList(), coll.Where(x => !predicate(x)).ToList());

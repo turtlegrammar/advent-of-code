@@ -32,34 +32,25 @@ public static class Day20
 
         var baselineCost = fromStart[endPoint];
 
-        var cheats = new List<(Cheat, long)>();
-        maze.ForEach((row, col, val) => {
-            if (val == EMPTY) {
-                var dirs = Direction.CardinalDirections;
-                var costToHere = fromStart[(row, col)];
-                var cs = dirs
-                    .Select(d => new Cheat((row, col).Add(d), (row, col).Add(d).Add(d)))
-                    .Where(c => maze.Get(c.Start) == WALL && maze.Get(c.End) == EMPTY);
-                foreach (var c in cs)
-                {
-                    var saved = baselineCost - (costToHere + fromEnd[c.End] + 2);
-                    if (saved > 0)
-                        cheats.Add((c, saved));
+        var cheatsD2 = FindCheats(2);
+        var cheatsD20 = FindCheats(20);
+
+        return (cheatsD2.Where(c => c.Item2 >= 100).Count(), cheatsD20.Where(c => c.Item2 >= 100).Count());
+
+        List<(Cheat, long)> FindCheats(int duration)
+        {
+            var cheats = new List<(Cheat, long)>();
+            maze.ForEach((r1, c1, v1) => 
+                maze.ForEach((r2, c2, v2) => {
+                    if (v1 == EMPTY && v2 == EMPTY) {
+                        var dist = (r1, c1).ManhattanDistance((r2, c2));
+                        var saved = baselineCost - (fromStart[(r1, c1)] + fromEnd[(r2, c2)] + dist);
+                        if (saved > 0 && dist <= duration)
+                            cheats.Add((new Cheat((r1, c1), (r2, c2)), saved));
+                    }
                 }
-            }
-        });
-
-        var grouped = cheats.GroupBy(t => t.Item2).ToDictionary(k => k.Key, k => k.Count());
-
-        // var possibleCheats = maze.Select((row, col, val) => 
-        //     val == WALL && row != 0 && row != maze.Array.Length - 1 && col != 0 && col != maze.Array[0].Length
-        //         ? (row, col).Adjacent4().Select(t => new Cheat((row, col), t)) 
-        //         : new List<Cheat>())
-        //     .SelectMany(x => x)
-        //     .Select(c => (c, baselineCost - (fromStart.GetValueOrDefault(c.One, 999999999) + fromEnd.GetValueOrDefault(c.Two, 999999999))))
-        //     // .Where(c => c.Item2 > 0)
-        //     .ToList();
-
-        return (cheats.Where(c => c.Item2 >= 100).Count(), 0);
+            ));
+            return cheats;
+        }
     }
 }
