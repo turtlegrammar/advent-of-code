@@ -25,24 +25,19 @@ public static class Day21
         var numericKeyToKeyPaths = BuildKeyToKeyPaths(numericKeypad);
         var directionalKeyToKeyPaths = BuildKeyToKeyPaths(directionalKeypad);
 
-        var xs = TypeOut("029A", 'A', numericKeypad, numericKeyToKeyPaths);
-        var ys = xs.SelectMany(x => TypeOut(x, 'A', directionalKeypad, directionalKeyToKeyPaths)).ToHashSet();
-        var zs = ys.SelectMany(y => TypeOut(y, 'A', directionalKeypad, directionalKeyToKeyPaths)).ToHashSet();
-        // var final = zs.SelectMany(z => TypeOut(z, 'A', directionalKeypad, directionalKeyToKeyPaths)).ToHashSet();
+        var cache = new Dictionary<(string, char), HashSet<string>>();
 
-        var complexities = File.ReadAllLines(file).Select(Complexity2).ToList();
+        var complexities = File.ReadAllLines(file).Select(Complexity).ToList();
 
         return (complexities.Select(c => c.Item1 * c.Item2).Sum(), 0);
 
-        // var coordinateToNumber = numericKeypad.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-        // var coordinateToDirection = directionalKeypad.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
-
         (long, long) Complexity(string code)
         {
-            var xs = TypeOut(code, 'A', numericKeypad, numericKeyToKeyPaths);
-            var ys = xs.SelectMany(x => TypeOut(x, 'A', directionalKeypad, directionalKeyToKeyPaths)).ToHashSet();
-            var zs = ys.SelectMany(y => TypeOut(y, 'A', directionalKeypad, directionalKeyToKeyPaths)).ToHashSet();
+            var xs = TypeOut(code, 'A', numericKeypad, numericKeyToKeyPaths).KeepSmallest();
+            var ys = xs.SelectMany(x => TypeOut(x, 'A', directionalKeypad, directionalKeyToKeyPaths)).KeepSmallest().ToHashSet();
+            var zs = ys.SelectMany(y => TypeOut(y, 'A', directionalKeypad, directionalKeyToKeyPaths)).KeepSmallest().ToHashSet();
             var length = zs.MinBy(z => z.Count()).Count();
+            var (a, b, c) = (xs.MinBy(x => x.Count()).Count(), ys.MinBy(y => y.Count()).Count(), length);
             return (length, Parse.Long(code));
         }
 

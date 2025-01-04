@@ -12,6 +12,14 @@ public static class Extensions
     public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) =>
         kvs.ToDictionary();
 
+    public static List<string> KeepSmallest(this IEnumerable<string> colls)
+    {
+        if (colls.Count() == 0)
+            return colls.ToList();
+        var targetSize = colls.MinBy(c => c.Count()).Count();
+        return colls.Where(c => c.Count() == targetSize).ToList();
+    }
+
     public static string StrJoin<T>(this IEnumerable<T> coll, string join = "") =>
         String.Join(join, coll.Select(x => x.ToString()));
 
@@ -235,10 +243,10 @@ public class Matrix<T>(T[][] array, T _null)
 public static class Parse
 {
     public static int Int(string s) =>
-        new Regex("([0-9]+)").Matches(s).Select(v => Int32.Parse(v.Value)).ToArray()[0];
+        new Regex("([0-9]*)").Matches(s).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToArray()[0];
 
     public static long Long(string s) =>
-        new Regex("([0-9]+)").Matches(s).Select(v => Int64.Parse(v.Value)).ToArray()[0];
+        new Regex("([0-9]*)").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
 
     public static int[] IntArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
