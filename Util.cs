@@ -12,7 +12,13 @@ public static class Extensions
     public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) =>
         kvs.ToDictionary();
 
-    public static void ForEach<T>(this T[] arr, Action<T> f)
+    public static void ForEach<T>(this IEnumerable<T> arr, Action<T> f)
+    {
+        foreach (var x in arr)
+            f(x);
+    }
+
+    public static void ForEach<T, R>(this IEnumerable<T> arr, Func<T, R> f)
     {
         foreach (var x in arr)
             f(x);
@@ -320,6 +326,9 @@ public static class Algorithms
                 visited.Add(lowestCostNode);
             }
         }
+
+        // This is probably a good thing to do, I hope it doesn't bite me someday.
+        costs[start] = 0;
 
         return (costs, parents);
     }
