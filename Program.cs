@@ -1,3 +1,7 @@
 ﻿using Advent;
+using Advent2025;
 
-Console.WriteLine(Day21.Run("/home/coder/code/advent-of-code/inputs/day-21-demo.txt"));
+var modifier = "";
+if (args.Length > 0 && args[0] == "demo")
+    modifier = "-demo";
+Console.WriteLine(Day3.Run($"/home/coder/code/advent-of-code/inputs/2025/day-3{modifier}.txt"));

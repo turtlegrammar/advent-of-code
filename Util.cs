@@ -6,10 +6,11 @@ namespace Advent;
 
 public static class Extensions
 {
+    public static R Pipe<T, R>(this T x, Func<T, R> f) => f(x);
     public static List<T> List<T>(params T[] xs) =>
         xs.ToList();
     
-    public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) =>
+    public static Dictionary<K, V> Dictionary<K, V>(params (K, V)[] kvs) where K: notnull =>
         kvs.ToDictionary();
 
     public static List<string> KeepSmallest(this IEnumerable<string> colls)
@@ -98,7 +99,7 @@ public static class Extensions
         return val;
     }
 
-    public static V AddDict<K, T, V>(this Dictionary<K, Dictionary<T, V>> dict, K key, T key2, V val)
+    public static V AddDict<K, T, V>(this Dictionary<K, Dictionary<T, V>> dict, K key, T key2, V val) where K: notnull where T: notnull
     {
         if (dict.TryGetValue(key, out var d))
             return d[key2] = val;
@@ -263,7 +264,7 @@ public static class Algorithms
     // adapted from https://stackoverflow.com/a/77917268
     public static (Dictionary<T, long> costs, Dictionary<T, HashSet<T>> parents) ShortestPathsFrom<T>(
         T start,
-        Dictionary<T, Dictionary<T, long>> neighbors)
+        Dictionary<T, Dictionary<T, long>> neighbors) where T: notnull
     {
         var visited = new HashSet<T>();
         var costs = new Dictionary<T, long>() { };
@@ -301,12 +302,12 @@ public static class Algorithms
         return (costs, parents);
     }
 
-    public static HashSet<T> NodesAlongShortestPathsToNode<T>(Dictionary<T, HashSet<T>> parents, T node) =>
+    public static HashSet<T> NodesAlongShortestPathsToNode<T>(Dictionary<T, HashSet<T>> parents, T node) where T: notnull =>
         parents.TryGetValue(node, out var ps)
         ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
         : new HashSet<T> { node };
 
-    public static List<List<T>> EnumeratePaths<T>(Dictionary<T, HashSet<T>> parents, T node)
+    public static List<List<T>> EnumeratePaths<T>(Dictionary<T, HashSet<T>> parents, T node) where T: notnull
     {
         if (parents.TryGetValue(node, out var ps))
         {
