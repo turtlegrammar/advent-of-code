@@ -80,6 +80,17 @@ public static class Extensions
             x.Add(Direction.Down),
             x.Add(Direction.Left)
         );
+    public static List<(int, int)> Adjacent8(this (int, int) x) =>
+        List(
+            x.Add(Direction.Up),
+            x.Add(Direction.Up).Add(Direction.Right),
+            x.Add(Direction.Right),
+            x.Add(Direction.Right).Add(Direction.Down),
+            x.Add(Direction.Down),
+            x.Add(Direction.Down).Add(Direction.Left),
+            x.Add(Direction.Left),
+            x.Add(Direction.Left).Add(Direction.Up)
+        );
 
     public static IEnumerable<(T, T)> OrderedPairs<T>(this IEnumerable<T> coll)
     {
