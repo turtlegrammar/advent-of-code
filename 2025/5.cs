@@ -17,7 +17,6 @@ public static class Day5
         var i = 0;
         while (i < ranges.Count)
         {
-            System.Console.WriteLine(i);
             var m = ranges[i];
             var j = i + 1;
             while (j < ranges.Count)
