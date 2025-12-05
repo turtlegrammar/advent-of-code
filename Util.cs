@@ -297,6 +297,15 @@ public static class Parse
     
     public static string[][] AlphanumLines(string file) =>
         File.ReadAllLines(file).Select(line => new Regex("([a-zA-Z0-9]+)").Matches(line).Select(v => v.Value).ToArray()).ToArray();
+
+    public static (long, long) Range(string s) =>
+        s.Split("-").Pipe(x => (Long(x[0]), Long(x[1])));
+
+    public static (List<A>, List<B>) Multi<A, B>(string file, Func<string, A> pa, Func<string, B> pb)
+    {
+        var lines = File.ReadAllLines(file);
+        return (lines.TakeWhile(l => l != "").Select(pa).ToList(), lines.SkipWhile(l => l != "").Skip(1).Select(pb).ToList());
+    }
 }
 
 public static class Algorithms
