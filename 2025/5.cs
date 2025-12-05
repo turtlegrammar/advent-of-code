@@ -12,33 +12,29 @@ public static class Day5
 
         var fresh = ingredients.Where(i => ranges.Any(r => r.Item1 <= i && i <= r.Item2)).ToList();
 
-        var lastRangeCount = 0;
-        do
+        ranges.Sort();
+        var merged = new List<(long, long)>();
+        var i = 0;
+        while (i < ranges.Count)
         {
-            lastRangeCount = ranges.Count;
-
-            var nextRanges = new List<(long, long)>();
-            var merged = new HashSet<int>();
-            for (int i = 0; i < ranges.Count; i++)
+            System.Console.WriteLine(i);
+            var m = ranges[i];
+            var j = i + 1;
+            while (j < ranges.Count)
             {
-                for (int j = i + 1; j < ranges.Count; j++)
+                var r = ranges[j];
+                if (m.Item2 >= r.Item1)
                 {
-                    if (merged.Contains(i) || merged.Contains(j))
-                        break;
-                    var ((low1, high1), (low2, high2)) = (ranges[i], ranges[j]).Order();
-                    if (high1 >= low2) {
-                        nextRanges.Add((low1, Math.Max(high1, high2)));
-                        merged.Add(i); merged.Add(j);
-                    }
+                    m = (m.Item1, Math.Max(m.Item2, r.Item2));
+                    j++;
                 }
+                else
+                    break;
             }
-            for (int i = 0; i < ranges.Count; i++)
-                if (!merged.Contains(i))
-                    nextRanges.Add(ranges[i]);
-            
-            ranges = nextRanges;
-        } while (ranges.Count != lastRangeCount);
+            i = j;
+            merged.Add(m);
+        }
 
-        return (fresh.Count(), ranges.Select(r => r.Item2 - r.Item1 + 1).Sum());
+        return (fresh.Count(), merged.Select(r => r.Item2 - r.Item1 + 1).Sum());
     }
 }
