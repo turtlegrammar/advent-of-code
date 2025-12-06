@@ -110,6 +110,19 @@ public static class Extensions
         }
     }
 
+    public static List<List<T>> Invert<T>(this T[][] arr)
+    {
+        var result = new List<List<T>>();
+        for (int c = 0; c < arr[0].Length; c++)
+        {
+            var x = new List<T>();
+            for (int r = 0; r < arr.Length; r++)
+                x.Add(arr[r][c]);
+            result.Add(x);
+        }
+        return result;
+    }
+
     public static Option<T> Some<T>(T value) => new Option<T>.Some(value);
     public static Option<T> None<T>() => new Option<T>.None();
 
@@ -286,6 +299,9 @@ public static class Parse
     public static long Long(string s) =>
         new Regex("([0-9]*)").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
 
+    public static long MessyLong(string s) =>
+        new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
+
     public static int[] IntArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
 
@@ -296,7 +312,7 @@ public static class Parse
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
     
     public static string[][] AlphanumLines(string file) =>
-        File.ReadAllLines(file).Select(line => new Regex("([a-zA-Z0-9]+)").Matches(line).Select(v => v.Value).ToArray()).ToArray();
+        File.ReadAllLines(file).Select(line => new Regex("([a-zA-Z0-9\\+\\*]+)").Matches(line).Select(v => v.Value).ToArray()).ToArray();
 
     public static (long, long) Range(string s) =>
         s.Split("-").Pipe(x => (Long(x[0]), Long(x[1])));
