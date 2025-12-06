@@ -10,6 +10,7 @@ public static class Day21
 {
     public static (long, long) Run(string file)
     {
+
         var numericKeypad = Dictionary(
             ('7', (0, 0)), ('8', (0, 1)), ('9', (0, 2)), 
             ('4', (1, 0)), ('5', (1, 1)), ('6', (1, 2)), 
@@ -25,21 +26,56 @@ public static class Day21
         var numericKeyToKeyPaths = BuildKeyToKeyPaths(numericKeypad);
         var directionalKeyToKeyPaths = BuildKeyToKeyPaths(directionalKeypad);
 
+        var costCache = new Dictionary<(string, int), long>();
+
         var cache = new Dictionary<(string, char), HashSet<string>>();
 
-        var complexities = File.ReadAllLines(file).Select(Complexity).ToList();
+        var codes = File.ReadAllLines(file);
 
-        return (complexities.Select(c => c.Item1 * c.Item2).Sum(), 0);
+        var part1 = codes.Select(c => CleverEfficientComplexity(c, 2)).Select(t => t.Item1 * t.Item2).Sum();
+        var part2 = codes.Select(c => CleverEfficientComplexity(c, 25)).Select(t => t.Item1 * t.Item2).Sum();
 
-        (long, long) Complexity(string code)
+        return (part1, part2);
+
+        (long, long) NaiveInefficientComplexity(string code, int directionalRobotKeyPadCount)
         {
-            var xs = TypeOut(code, 'A', numericKeypad, numericKeyToKeyPaths).KeepSmallest();
-            var ys = xs.SelectMany(x => TypeOut(x, 'A', directionalKeypad, directionalKeyToKeyPaths)).KeepSmallest().ToHashSet();
-            var zs = ys.SelectMany(y => TypeOut(y, 'A', directionalKeypad, directionalKeyToKeyPaths)).KeepSmallest().ToHashSet();
-            var length = zs.MinBy(z => z.Count()).Count();
-            var (a, b, c) = (xs.MinBy(x => x.Count()).Count(), ys.MinBy(y => y.Count()).Count(), length);
+            var xs = TypeOut(code, 'A', numericKeypad, numericKeyToKeyPaths).KeepSmallest().ToHashSet();
+            var iterative = xs;
+            for (int i = 0; i < directionalRobotKeyPadCount; i++)
+                iterative = iterative.SelectMany(x => TypeOut(x, 'A', directionalKeypad, directionalKeyToKeyPaths)).KeepSmallest().ToHashSet();
+            var length = iterative.MinBy(z => z.Count()).Count();
             return (length, Parse.Long(code));
         }
+
+        (long, long) CleverEfficientComplexity(string code, int directionalRobotKeyPadCount)
+        {
+            var xs = TypeOut(code, 'A', numericKeypad, numericKeyToKeyPaths).KeepSmallest().ToHashSet();
+            return (xs.Select(x => MemoizedComplexity(x, directionalRobotKeyPadCount)).Min(), Parse.Long(code));
+        }
+
+        long MemoizedComplexity(string code, int depth)
+        {
+            var keypad = directionalKeypad;
+            var paths = directionalKeyToKeyPaths;
+
+            if (costCache.TryGetValue((code, depth), out var cachedResult))
+                return cachedResult;
+            else if (depth == 0)
+                return code.Length;
+            else
+            {
+                var possibilities = TypeOut(code, 'A', keypad, paths).KeepSmallest();
+                var smallests = new List<long>();
+                foreach (var possibility in possibilities)
+                {
+                    var split = possibility.Split("A").Select(p => p + "A").ToList();
+                    var smallest = split.Select(s => MemoizedComplexity(s, depth - 1)).Sum();
+                    smallests.Add(smallest);
+                }
+                return costCache[(code, depth)] = smallests.Min() -1;
+            }
+        }
+
 
         List<string> TypeOut(string sequence, char cursor, Dictionary<char, (int, int)> keypad, Dictionary<char, Dictionary<char, List<string>>> paths)
         {

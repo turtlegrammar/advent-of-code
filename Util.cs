@@ -32,6 +32,11 @@ public static class Extensions
         var targetSize = colls.MinBy(c => c.Count()).Count();
         return colls.Where(c => c.Count() == targetSize).ToList();
     }
+    
+    private static Random _random = new Random();
+
+    public static T RandomElement<T>(this List<T> coll) =>
+        coll[_random.Next(0, coll.Count)];
 
     public static string StrJoin<T>(this IEnumerable<T> coll, string join = "") =>
         String.Join(join, coll.Select(x => x.ToString()));
