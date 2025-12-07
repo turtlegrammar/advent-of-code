@@ -1,7 +1,7 @@
 ﻿using Advent;
-using Advent2024;
+using Advent2025;
 
 var modifier = "";
 if (args.Length > 0 && args[0] == "demo")
     modifier = "-demo";
-Console.WriteLine(Day24.Run($"inputs/2024/day-24{modifier}.txt"));
+Console.WriteLine(Day7.Run($"inputs/2025/day-7{modifier}.txt"));
