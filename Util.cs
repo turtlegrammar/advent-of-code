@@ -105,6 +105,13 @@ public static class Extensions
                 yield return (list[i], list[j]);
     }
 
+    public static IEnumerable<(T, T)> AllPairsWith<T>(this IEnumerable<T> xs, IEnumerable<T> ys)
+    {
+        foreach (var x in xs)
+            foreach (var y in ys)
+                yield return (x, y);
+    }
+
     public static IEnumerable<T> IterativeSeq<T>(T seed, Func<T, T> next)
     {
         var x = seed;
@@ -127,6 +134,9 @@ public static class Extensions
         }
         return result;
     }
+
+    public static List<List<T>> Invert<T>(this List<List<T>> arr) => 
+        arr.Select(a => a.ToArray()).ToArray().Invert();
 
     public static Option<T> Some<T>(T value) => new Option<T>.Some(value);
     public static Option<T> None<T>() => new Option<T>.None();
@@ -331,6 +341,28 @@ public static class Parse
     {
         var lines = File.ReadAllLines(file);
         return (lines.TakeWhile(l => l != "").Select(pa).ToList(), lines.SkipWhile(l => l != "").Skip(1).Select(pb).ToList());
+    }
+
+    public static List<List<string>> Blocks(string file)
+    {
+        var result = new List<List<string>>();
+
+        var block = new List<string>();
+
+        foreach (var line in File.ReadAllLines(file))
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                result.Add(block);
+                block = [];
+            }
+            else
+            {
+                block.Add(line);
+            }
+        }
+        result.Add(block);
+        return result;
     }
 }
 
