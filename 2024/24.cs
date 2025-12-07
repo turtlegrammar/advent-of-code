@@ -1,8 +1,6 @@
 namespace Advent;
 
-using System.Collections.Immutable;
 using System.Data;
-using System.Dynamic;
 using static Advent.Extensions;
 
 public static class Day24
@@ -19,9 +17,8 @@ public static class Day24
                 return new Wire(t[1], g1, g2);
             });
 
+        // Part 1
         relations.Keys.ForEach(Solve);
-
-        var swaps = Validate(relations);
 
         var binary = relations.Keys
             .Where(wire => wire.StartsWith("z"))
@@ -30,8 +27,12 @@ public static class Day24
             .StrJoin();
         var asDecimal = Convert.ToInt64(binary, 2);
 
+        // Part 2
+        var swaps = Validate(relations);
+
         return (asDecimal, swaps.SelectMany(t => t.ToList()).Order().StrJoin(","));
 
+        // For exploration, to discover the recurrence relationship
         string UnNest(string gate, bool allowZ)
         {
             if (gate.StartsWith("x") || gate.StartsWith("y") || (gate.StartsWith("z") && allowZ))
@@ -72,7 +73,6 @@ public static class Day24
                 var orAtThisLevel = (andPreviousXY, andLastZ).Order().Pipe(t => InverseRelation("OR", t.Item1, t.Item2));
                 var xOrAtThisLevel = InverseRelation("XOR", Gate("x", zNum), Gate("y", zNum));
 
-
                 var (e1, e2) = (orAtThisLevel, xOrAtThisLevel).Order();
                 var expectedHere = InverseRelation("XOR", e1, e2);
 
@@ -81,10 +81,6 @@ public static class Day24
                 if ((op, g1, g2) != ("XOR", e1, e2))
                 {
                     Swap(expectedHere, Gate("z", zNum));
-                    System.Console.WriteLine($"Going to swap {expectedHere} and {Gate("z", zNum)}");
-                    // relations[Gate("z", zNum)] = new("XOR", e1, e2);
-                    // relations[expectedHere] = new(op, g1, g2);
-                    // inverseRelations = relations.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
                 }
             }
 
@@ -95,26 +91,25 @@ public static class Day24
                 if (inverseRelations.TryGetValue(new(op, g1, g2), out var wire))
                     return wire;
                 
-                var possibilities = relations.Where(kvp => kvp.Value.Op == op 
+                var possibleSwaps = relations.Where(kvp => kvp.Value.Op == op 
                     && (kvp.Value.Gate1 == g1 || kvp.Value.Gate2 == g1 || kvp.Value.Gate1 == g2 || kvp.Value.Gate2 == g2))
                     .ToList();
 
-                var str = possibilities.Select(kvp => $"{kvp.Key}:({kvp.Value.Op}, {kvp.Value.Gate1}, {kvp.Value.Gate2})").StrJoin(", ");
-
-                System.Console.WriteLine($"Unable to find ({op}, {g1}, {g2}). Possible swaps: {str}");
-
-                var letsSwap = possibilities.First().Value;
+                var letsSwap = possibleSwaps.First().Value;
                 var lgs = new HashSet<string> { g1, g2}; var rgs = new HashSet<string> { letsSwap.Gate1, letsSwap.Gate2};
                 var leftSwap = lgs.Except(rgs).First(); var rightSwap = rgs.Except(lgs).First();
+                var same = lgs.Intersect(rgs).First();
 
                 Swap(leftSwap, rightSwap);
 
-                return inverseRelations[new(op, g1, g2)];
+                var (g1New, g2New) = (same, rightSwap).Order();
+
+                // todo: while this solves the problem, I should probably propagate this swap upwards
+                return inverseRelations[new("XOR", g1New, g2New)];
             }
 
             void Swap(string leftWire, string rightWire)
             {
-                System.Console.WriteLine($"Swapping {leftWire} {rightWire}");
                 var (lop, lg1, lg2) = relations[leftWire]; 
                 var (rop, rg1, rg2) = relations[rightWire];
                 relations[leftWire] = new(rop, rg1, rg2);
