@@ -162,6 +162,11 @@ public static class Extensions
         coll.Sort();
         return (coll[0], coll[1]);
     }
+
+    public static List<T> ToList<T>(this (T, T) tup) => [tup.Item1, tup.Item2];
+    public static List<T> ToList<T>(this (T, T, T) tup) => [tup.Item1, tup.Item2, tup.Item3];
+    public static HashSet<T> ToHashSet<T>(this (T, T) tup) => [tup.Item1, tup.Item2];
+    public static HashSet<T> ToHashSet<T>(this (T, T, T) tup) => [tup.Item1, tup.Item2, tup.Item3];
 }
 
 public record Option<T>
