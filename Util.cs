@@ -177,6 +177,24 @@ public static class Extensions
     public static List<T> ToList<T>(this (T, T, T) tup) => [tup.Item1, tup.Item2, tup.Item3];
     public static HashSet<T> ToHashSet<T>(this (T, T) tup) => [tup.Item1, tup.Item2];
     public static HashSet<T> ToHashSet<T>(this (T, T, T) tup) => [tup.Item1, tup.Item2, tup.Item3];
+
+    public static Dictionary<K, V> MergeWith<K, V>(this Dictionary<K, V> xs, Dictionary<K, V> ys, Func<V, V, V> merge)
+    {
+        var result = new Dictionary<K, V>();
+        foreach (var (k, v) in xs)
+            result[k] = v;
+        foreach (var (k, v) in ys)
+            result[k] = result.TryGetValue(k, out var existing) ? merge(existing, v) : v;
+        return result;
+    }
+
+    public static Dictionary<K, V> MergeWith<K, V>(this IEnumerable<Dictionary<K, V>> xs, Func<V, V, V> merge)
+    {
+        var result = new Dictionary<K, V>();
+        foreach (var d in xs)
+            result = result.MergeWith(d, merge);
+        return result;
+    }
 }
 
 public record Option<T>
