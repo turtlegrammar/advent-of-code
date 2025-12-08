@@ -52,8 +52,19 @@ public static class Extensions
         return (arr[0], arr[1]);
     }
 
+    public static (T, T, T) ToTuple3<T>(this IEnumerable<T> coll) 
+    {
+        var arr = coll.ToArray();
+        return (arr[0], arr[1], arr[2]);
+    }
+
     public static int ManhattanDistance(this (int, int) x, (int, int) y) =>
         Math.Abs(x.Item1 - y.Item1) + Math.Abs(x.Item2 - y.Item2);
+
+    public static double Distance(this (long, long, long) x, (long, long, long) y) =>
+        Math.Sqrt((x.X() - y.X()).Square() + (x.Y() - y.Y()).Square() + (x.Z() - y.Z()).Square());
+
+    public static long Square(this long l) => l * l;
 
     public static int Sum(this (int, int) x) => x.Item1 + x.Item2;
 
@@ -77,6 +88,9 @@ public static class Extensions
 
     public static T X<T>(this (T, T) tup) => tup.Item1;
     public static T Y<T>(this (T, T) tup) => tup.Item2;
+    public static T X<T>(this (T, T, T) tup) => tup.Item1;
+    public static T Y<T>(this (T, T, T) tup) => tup.Item2;
+    public static T Z<T>(this (T, T, T) tup) => tup.Item3;
 
     public static List<(int, int)> Adjacent4(this (int, int) x) =>
         List(
@@ -345,6 +359,9 @@ public static class Parse
 
     public static int[][] IntArrayLines(string file) =>
         File.ReadAllLines(file).Select(line => new Regex("(-{0,1}[0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
+
+    public static long[][] LongArrayLines(string file) =>
+        File.ReadAllLines(file).Select(line => new Regex("(-{0,1}[0-9]+)").Matches(line).Select(v => Int64.Parse(v.Value)).ToArray()).ToArray();
 
     public static long[] LongArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int64.Parse(v.Value)).ToArray();
