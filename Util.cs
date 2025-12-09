@@ -64,6 +64,9 @@ public static class Extensions
     public static double Distance(this (long, long, long) x, (long, long, long) y) =>
         Math.Sqrt((x.X() - y.X()).Square() + (x.Y() - y.Y()).Square() + (x.Z() - y.Z()).Square());
 
+    public static double Distance(this (long, long) x, (long, long) y) =>
+        Math.Sqrt((x.X() - y.X()).Square() + (x.Y() - y.Y()).Square());
+
     public static long Square(this long l) => l * l;
 
     public static int Sum(this (int, int) x) => x.Item1 + x.Item2;
@@ -100,6 +103,25 @@ public static class Extensions
             x.Add(Direction.Left)
         );
     public static List<(int, int)> Adjacent8(this (int, int) x) =>
+        List(
+            x.Add(Direction.Up),
+            x.Add(Direction.Up).Add(Direction.Right),
+            x.Add(Direction.Right),
+            x.Add(Direction.Right).Add(Direction.Down),
+            x.Add(Direction.Down),
+            x.Add(Direction.Down).Add(Direction.Left),
+            x.Add(Direction.Left),
+            x.Add(Direction.Left).Add(Direction.Up)
+        );
+
+    public static List<(long, long)> Adjacent4(this (long, long) x) =>
+        List(
+            x.Add(Direction.Up),
+            x.Add(Direction.Right),
+            x.Add(Direction.Down),
+            x.Add(Direction.Left)
+        );
+    public static List<(long, long)> Adjacent8(this (long, long) x) =>
         List(
             x.Add(Direction.Up),
             x.Add(Direction.Up).Add(Direction.Right),
@@ -464,10 +486,20 @@ public static class Algorithms
             return List(List(node));
         }
     }
-        // parents.TryGetValue(node, out var ps)
-        // // ? List(node).Concat(ps.SelectMany(p => NodesAlongShortestPathsToNode(parents, p))).ToHashSet()
-        // ? ps.Select(p => List(node, p).Concat(Enumer))
-        // : List(List(node))
+
+    public static List<(long, long)> Chunkify(List<(long, long)> coll, Func<(long, long), long> plane)
+    {
+        if (coll.Count <= 1) return coll;
+        var result = new List<(long, long)>();
+        for (int i = 0; i < coll.Count; i++)
+        {
+            var beginsChunk = i == 0 || plane(coll[i]) > plane(coll[i - 1]) + 1;
+            var endsChunk = i == coll.Count -1 || plane(coll[i + 1]) > plane(coll[i]) + 1;
+            if (beginsChunk || endsChunk)
+                result.Add(coll[i]);
+        }
+        return result;
+    }
 }
 
 public class Graph<T>
