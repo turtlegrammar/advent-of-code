@@ -379,6 +379,9 @@ public static class Parse
     public static int[] IntArray(string file) =>
         new Regex("([0-9]+)").Matches(File.ReadAllText(file)).Select(v => Int32.Parse(v.Value)).ToArray();
 
+    public static int[] Ints(string text) =>
+        new Regex("([0-9]+)").Matches(text).Select(v => Int32.Parse(v.Value)).ToArray();
+
     public static int[][] IntArrayLines(string file) =>
         File.ReadAllLines(file).Select(line => new Regex("(-{0,1}[0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
 
