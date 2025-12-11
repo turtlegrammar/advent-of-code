@@ -382,6 +382,9 @@ public static class Parse
     public static int[] Ints(string text) =>
         new Regex("([0-9]+)").Matches(text).Select(v => Int32.Parse(v.Value)).ToArray();
 
+    public static long[] Longs(string text) =>
+        new Regex("([0-9]+)").Matches(text).Select(v => Int64.Parse(v.Value)).ToArray();
+
     public static int[][] IntArrayLines(string file) =>
         File.ReadAllLines(file).Select(line => new Regex("(-{0,1}[0-9]+)").Matches(line).Select(v => Int32.Parse(v.Value)).ToArray()).ToArray();
 
@@ -452,6 +455,50 @@ public static class Algorithms
                 foreach (var (neighbor, costToNeighbor) in ns)
                 {
                     var newCost = cost + costToNeighbor;
+                    // the = case doesn't update the cost but it does add a new parent
+                    if (!costs.ContainsKey(neighbor) || newCost <= costs[neighbor]) 
+                    {
+                        costs[neighbor] = newCost;
+                        // we never need to update https://github.com/dotnet/runtime/issues/44871#issuecomment-2039292354
+                        queue.Enqueue(neighbor, newCost);
+                        parents.AddSet(neighbor, lowestCostNode);
+                    }
+                }
+
+                visited.Add(lowestCostNode);
+            }
+        }
+
+        // This is probably a good thing to do, I hope it doesn't bite me someday.
+        costs[start] = 0;
+
+        return (costs, parents);
+    }
+
+    public static (Dictionary<T, long> costs, Dictionary<T, HashSet<T>> parents) ShortestPathsFrom2<T>(
+        T start,
+        Func<T, List<T>> genNeighbors) where T: notnull
+    {
+        var visited = new HashSet<T>();
+        var costs = new Dictionary<T, long>() { };
+        var parents = new Dictionary<T, HashSet<T>>();
+        var queue = new PriorityQueue<T, long>();
+
+        costs = genNeighbors(start).ToDictionary(x => x, _ => 1L);
+
+        foreach (var c in costs)
+            queue.Enqueue(c.Key, c.Value);
+
+        while (queue.TryDequeue(out var lowestCostNode, out var _))
+        {
+            // visited seems to not be necessary, but does speed it up some
+            if (!visited.Contains(lowestCostNode))
+            {
+                var cost = costs[lowestCostNode];
+                var ns = genNeighbors(lowestCostNode).Where(n => !visited.Contains(n));
+                foreach (var neighbor in ns)
+                {
+                    var newCost = cost + 1;
                     // the = case doesn't update the cost but it does add a new parent
                     if (!costs.ContainsKey(neighbor) || newCost <= costs[neighbor]) 
                     {
