@@ -7,12 +7,66 @@ using Advent;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
 
+
+/*
+c + d + g + i + k = 73
+c + d + g + i + j + k + l = 92
+a + f + g + h + i + k = 75
+a + d + e + g + i = 46
+a + b + d + g + i + l = 75
+d + f + k = 30
+a + e + g + k + m = 45
+a + d + e + h + j + l = 37
+a + d + f + g + h + i + k + l + m = 109
+a + d + e + i + j + m = 39
+
+c + d + g + i + k = 73
+c + d + g + i + j + k + l = 92
+=>
+j + l = 19
+
+a + f + g + h + i + k = 75
+a + d + f + g + h + i + k + l + m = 109
+=> d + l + m => 24
+
+d + f + k = 30
+a + d + f + g + h + i + k + l + m = 109
+=>
+a + g + h + i + l + m => 79
+
+a + g + h + i + l + m => 79
+d + l + m => 24
+j + l = 19
+substitutions:
+c + d + g + i + k = 73
+c + d + g + i + j + k + l = 92 -> c + d + g + i + k = 73
+a + f + g + h + i + k = 75
+a + d + e + g + i = 46
+a + b + d + g + i + l = 75
+d + f + k = 30
+a + e + g + k + m = 45
+a + d + e + h + j + l = 37
+a + d + f + g + h + i + k + l + m = 109   -> a + d + f + k = 30 AND a + f + g + h + i + k = 
+a + d + e + i + j + m = 39
+
+
+*/
+
 public static class Day10
 {
     public record Variable(char Name, int Coefficient);
     public record Equation(List<char> Variables, long Sum);
-    public record Equation2(List<Variable> Variables, long Sum);
-    public record ConstraintSystem(List<Equation2> Equations, Dictionary<char, long> MaxValues);
+    public class Equation2
+    {
+        public Equation2(List<Variable> variables, long sum)
+        {
+            Variables = variables; Sum = sum;
+        }
+
+        public long Sum { get; set; }
+        public List<Variable> Variables { get; set; }
+    }
+    public record ConstraintSystem(List<Equation2> Equations, Dictionary<char, long> MaxValues, List<char> OrderedVariables);
 
     public record Machine(string TargetState, List<long[]> Wiring, List<long> Joltage);
 
@@ -28,48 +82,55 @@ public static class Day10
         // var x = ParseMachine("[..#####.##] (1,3,4,6,7,8,9) (4) (0,2) (0,2,3,4,5,7,8,9) (3,6,7,9) (1,5,8) (0,1,2,3,4,6,8) (1,7,8) (0,1,2,3,4,8,9) (2,7,9) (0,1,2,5,6,8) (2,4,7,8) (6,8,9) {73,75,92,46,75,30,45,37,109,39}");
         // var m = MachineToConstraints(x);
 
-        var problemChild = eqs[5];
-        // problemChild.Equations.Select(e => $"{e.Variables.StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
-        // var simped = SimplifySystem(problemChild.Equations.ToList());
-        // Console.WriteLine("");
-        // simped.Select(e => $"{e.Variables.StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
-        // var simped2 = SimplifySystem(simped);
-        // Console.WriteLine("");
-        // simped2.Select(e => $"{e.Variables.StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
-        // var simped3 = SimplifySystem(simped2);
-        Console.WriteLine("");
-        // simped3.Select(e => $"{e.Variables.StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
+        // var (m, e) = (machines[5], eqs[5]);
 
-        // problemChild = problemChild with { Equations = SimplifySystem(problemChild.Equations).Union(problemChild.Equations).ToList() };
-        // problemChild = problemChild with { Equations = SimplifySystem(SimplifySystem(problemChild.Equations)).Union(problemChild.Equations).ToList() };
-        // problemChild = problemChild with { Equations = SimplifySystem(problemChild.Equations) };
-        // problemChild.Equations.Select(e => $"{e.Variables.StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
+        // Console.WriteLine("old method: ");
+        // TestConstraintSolver(e);
 
-        // TestConstraintSolver(problemChild);
-        // problemChild = problemChild with { Equations = SimplifySystem(SimplifySystem(SimplifySystem(SimplifySystem(problemChild.Equations)))).Union(problemChild.Equations).ToList() };
-        problemChild = problemChild with { Equations = SimplifySystem(SimplifySystem(SimplifySystem(SimplifySystem(SimplifySystem(SimplifySystem(problemChild.Equations)))))).Union(problemChild.Equations).ToList() };
-        TestConstraintSolver(problemChild);
+        var part2 = eqs.Select(TestConstraintSolver).Sum();
 
-        // foreach (var eq in eqs) { TestConstraintSolver(eq); }
-        // TestConstraintSolver(eqs[5]);
-        // TestConstraintSolver(eqs[0]);
-        // var startingConstraints = eqs[1].MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0, kvp.Value));
-        // Console.WriteLine(startingConstraints.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Value.Item1} <= {kvp.Key} <= {kvp.Value.Item2}").StrJoin(", "));
-
-        // e + f - 3 = 0
-        // b + f - 5 = 0
-        // e -b + 2 = 0
-
-        // demo: 6,609 -- a=1, b=2, c=0, d=4, e=0, f=3
-        // real: 6,683,907 -- a=7, b=16, c=20, d=17, e=7
-        // return (paths.Sum(), 0);
-        return (part1.Sum(),0);// eqs.Select(MinimalButtonPressesForJoltage).Sum());
+        return (part1.Sum(),part2);// eqs.Select(MinimalButtonPressesForJoltage).Sum());
 
         bool ConstraintsValid(Dictionary<char, (long, long)> cs) =>
             cs.All(kvp => kvp.Value.Item1 <= kvp.Value.Item2);
 
         static Equation2 ToEquation2(Equation eq) =>
             new Equation2(eq.Variables.Select(v => new Variable(v, 1)).ToList(), eq.Sum);
+
+        bool SimplifySystem2(List<Equation2> equations)
+        {
+            var didSomething = true;
+            var haveMerged = new HashSet<(string, string)>();
+            var equationExists = equations.Select(Equation2ToString).ToHashSet();
+            while (didSomething)
+            {
+                var toAdd = new List<Equation2>();
+                didSomething = false;
+                foreach (var e in equations)
+                    foreach (var f in equations)
+                    {
+                        // if all of e is contained within f
+                        if (e.Variables.Any() && f.Variables.Any() 
+                            && e != f 
+                            && e.Variables.All(v => f.Variables.Any(fv => fv.Name == v.Name))
+                            && f.Variables.Count > e.Variables.Count
+                            && !haveMerged.Contains((Equation2ToString(e), Equation2ToString(f))))
+                        {
+                            // Console.WriteLine($"Merging {Equation2ToString(e)} into {Equation2ToString(f)}");
+                            var newEq = new Equation2(f.Variables.Where(v => !e.Variables.Any(ev => ev.Name == v.Name)).ToList(), f.Sum - e.Sum);
+                            if (!equationExists.Contains(Equation2ToString(newEq)))
+                            {
+                                toAdd.Add(newEq);
+                                equationExists.Add(Equation2ToString(newEq));
+                                haveMerged.Add((Equation2ToString(e), Equation2ToString(f)));
+                                didSomething = true;
+                            }
+                        }
+                    }
+                equations.AddRange(toAdd);
+            }
+            return didSomething;
+        }
 
         List<Equation2> SimplifySystem(List<Equation2> equations)
         {
@@ -83,17 +144,17 @@ public static class Day10
                     .Select(v => new Variable(v.Name, -1*v.Coefficient)).ToList(), 
                 smallestEquation.Sum);
 
-            Console.WriteLine($"Substituting {mostUsedVariable}, equivalent exp: {Equation2ToString(equivalentExpression)}");
+            // Console.WriteLine($"Substituting {mostUsedVariable}, equivalent exp: {Equation2ToString(equivalentExpression)}");
 
             return equations.Where(e => e != smallestEquation)
-                .Select(e => Substitute(e, mostUsedVariable, equivalentExpression))
+                .SelectMany(e => Substitute(e, mostUsedVariable, equivalentExpression))
                 .ToList();
 
-            Equation2 Substitute(Equation2 eq, char varName, Equation2 expression)
+            List<Equation2> Substitute(Equation2 eq, char varName, Equation2 expression)
             {
                 if (!eq.Variables.Any(v => v.Name == varName))
                 {
-                    return eq;
+                    return List(eq);
                 }
                 var nextSum = eq.Sum - expression.Sum;
                 var mag = eq.Variables.Where(v => v.Name == varName).Single().Coefficient;
@@ -107,9 +168,9 @@ public static class Day10
                     .ToList();
 
                 var afterSubstitution = new Equation2(newVars, nextSum);
-                Console.WriteLine($"Transformed {Equation2ToString(eq)} into {Equation2ToString(afterSubstitution)}");
+                // Console.WriteLine($"Transformed {Equation2ToString(eq)} into {Equation2ToString(afterSubstitution)}");
 
-                return afterSubstitution;
+                return List(afterSubstitution, eq);
             }
         }
 
@@ -170,26 +231,35 @@ public static class Day10
             var (solutions, iterations) = SolveConstraint(system);
             if (!solutions.Any())
             {
-                Console.WriteLine($"F'd ");
+                // Console.WriteLine($"F'd ");
                 return 0;
             }
             var bestSolution = solutions.MinBy(s => s.Values.Sum());
             return bestSolution.Values.Sum();
         }
 
-        void TestConstraintSolver(ConstraintSystem system)
+        long TestConstraintSolver(ConstraintSystem system, int i = 0)
         {
-            system.Equations.Select(e => $"{e.Variables.Select(v => $"{v.Coefficient}{v.Name}").StrJoin(" + ")} = {e.Sum}").ForEach(Console.WriteLine);
-            Console.WriteLine(system.MaxValues.Select(kvp => $"{kvp.Key} <= {kvp.Value}").StrJoin($"; "));
+            // system.Equations.Select(Equation2ToString).ForEach(Console.WriteLine);
+            // Console.WriteLine("After simplification:");
+            SimplifySystem2(system.Equations);
+            // Console.WriteLine($"Going to solve {i}");
+            // system.Equations.Select(Equation2ToString).ForEach(Console.WriteLine);
+
             var (solutions, iterations) = SolveConstraint(system);
             var bestSolution = solutions.MinBy(s => s.Values.Sum());
-            Console.WriteLine($"Iterations: {iterations}");
-            Console.WriteLine(bestSolution.Select(kvp => $"{kvp.Key}={kvp.Value}").StrJoin(", "));
+            Console.WriteLine($"{i} - Solution: {bestSolution.Values.Sum()}; Iterations: {iterations}\n");
+            return bestSolution.Values.Sum();
+            // solutions.ForEach(s => Console.WriteLine(s.Select(kvp => $"{kvp.Key}={kvp.Value}").StrJoin(", ")));
+            // Console.WriteLine(bestSolution.Select(kvp => $"{kvp.Key}={kvp.Value}").StrJoin(", "));
+            // Console.WriteLine(bestSolution.Values.Sum());
         }
 
         (List<Dictionary<char, long>> Solutions, long Iterations) SolveConstraint(ConstraintSystem system)
         {
-            var variables = system.MaxValues.Keys.Order().ToList();
+            // var variables = system.Equations.SelectMany(e => e.Variables.Select(v => v.Name)).Distinct().Order().ToList(); // system.MaxValues.Keys.Order().ToList();
+            var variables = system.OrderedVariables;
+            // Console.WriteLine(variables.StrJoin(", "));
             var state = new Dictionary<char, long>();
             var cursor = 0;
             var iterations = 0;
@@ -208,13 +278,19 @@ public static class Day10
                 // constraints = RefineConstraints(system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
                 //         .MergeWith(state.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right), system);
                 if (iterations % 10000 == 0)
-                    Console.WriteLine(constraints.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Value.Item1} <= {kvp.Key} <= {kvp.Value.Item2}").StrJoin(", "));
+                {
+                    // Console.WriteLine(constraints.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Value.Item1} <= {kvp.Key} <= {kvp.Value.Item2}").StrJoin(", "));
+                    // Console.WriteLine(state.OrderBy(kvp => kvp.Key).StrJoin(" "));
+                }
                 // Console.WriteLine(state.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key} = {kvp.Value}").StrJoin(", "));
 
                 if (FoundSolution())
                 {
+                    // Console.WriteLine($"Found solution!: {iterations} = {state.Values.Sum()} (compared to {bestSolutionThusFar})");
+                    // Console.WriteLine($"Solution: {state.OrderBy(kvp => kvp.Key).StrJoin("")}");
                     solutions.Add(state.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
-                    bestSolutionThusFar = state.Values.Sum();
+                    bestSolutionThusFar = Math.Min(state.Values.Sum(), bestSolutionThusFar);
+                    // Console.WriteLine($"Best solution thus far now: {bestSolutionThusFar}");
                 }
 
                 iterations++;
@@ -231,7 +307,7 @@ public static class Day10
                             var stateCopy2 = state.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                             stateCopy2.Remove(variables[cursor]);
                             var redoneConstraints2 = system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
-                                    .MergeWith(stateCopy.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right);
+                                    .MergeWith(stateCopy2.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right);
                             constraints = RefineConstraints(redoneConstraints2, system);
                         }
                         if (state.ContainsKey(variables[cursor]) && state[variables[cursor]] <= constraints[variables[cursor]].Item2)
@@ -294,15 +370,15 @@ public static class Day10
                 }
                 else if (state.Values.Sum() >= bestSolutionThusFar)
                 {
+                    // Console.WriteLine("Backtracking because this state will never get better.");
                     reason = "This solution sucks compared to a previous one.";
                     return true;
                 } 
-                // else if(system.Equations.Any(eq => EvalEq(eq) > eq.Sum))
-                // {
-                //     var badEq = system.Equations.First(eq => EvalEq(eq) > eq.Sum);
-                //     reason = $"An equation evaluates to more than its possible sum - can only get worse from here: {badEq.Variables.StrJoin(",")} = {badEq.Sum}";
-                //     return true;
-                // }
+                else if (system.Equations.Any(eq => MinimumBoundEq(eq) > eq.Sum || MaximumBoundEq(eq) < eq.Sum))
+                {
+                    reason = "An equation evaluates to more or less than its possible sum - can't get better.";
+                    return true;
+                }
                 reason = "";
                 return false;
             }
@@ -312,6 +388,13 @@ public static class Day10
 
             long EvalEq(Equation2 eq) => 
                 eq.Variables.Select(v => state.TryGetValue(v.Name, out var value) ? value*v.Coefficient : 0).Sum();
+
+            // doesn't work with coefficients
+            long MinimumBoundEq(Equation2 eq) =>
+                eq.Variables.Select(v => constraints.TryGetValue(v.Name, out var value) ? value.Item1 : 0).Sum();
+
+            long MaximumBoundEq(Equation2 eq) =>
+                eq.Variables.Select(v => constraints.TryGetValue(v.Name, out var value) ? value.Item2 : 0).Sum();
         }
 
         ConstraintSystem MachineToConstraints(Machine m)
@@ -329,7 +412,13 @@ public static class Day10
 
             var maxes = equations.Select(e => e.Variables.ToDictionary(v => v.Name, _ => e.Sum)).MergeWith((x, y) => Math.Min(x, y));
 
-            return new (equations, maxes);
+            var variablesFromMostToLeastPowerful = 
+                equations.SelectMany(e => e.Variables.Select(v => v.Name))
+                    .Distinct()
+                    .OrderByDescending(v => equations.Where(e => e.Variables.Any(ev => ev.Name == v)).Count())
+                    .ToList();
+
+            return new (equations, maxes, variablesFromMostToLeastPowerful);
 
             long[] GenVector(long[] wiring)
             {
@@ -361,6 +450,99 @@ public static class Day10
                 }
             }
             return Int64.MaxValue;
+        }
+
+        long ShortestPathJoltageWithMult(Machine m)
+        {
+            var visisted = new HashSet<string>();
+            var hasBeenQueued = new HashSet<string>();
+            hasBeenQueued.Add(m.Joltage.Select(_ => "0").StrJoin(","));
+            // var queue = new Queue<(string, long)>();
+            var queue = new PriorityQueue<(string, long), long>();
+            queue.Enqueue((m.Joltage.Select(_ => "0").StrJoin(","), 0), m.Joltage.Sum());
+            var target = m.Joltage.StrJoin(",");
+            var mins = m.Joltage.Select(_ => 0).ToList();
+            var iter = 0;
+            while (queue.TryDequeue(out var here, out var p))
+            {
+                if (p < 0)
+                    throw new Exception("neg p");
+                var (currentState, i) = here;
+                if (iter++ < 100)
+                    Console.WriteLine(here);
+
+                if (currentState == target)
+                {
+                    Console.WriteLine($"current state: {currentState}");
+                    Console.WriteLine($"queue count: {queue.Count}");
+                    Console.WriteLine($"Peek: {queue.Peek()}");
+                    // Console.WriteLine(queue.Take(30).StrJoin(","));
+                    return i;
+                }
+                if (!visisted.Contains(currentState))
+                {
+                    var parsedCurrent = currentState.Split(",").Select(Parse.Long).ToList();
+                    if (parsedCurrent.Zip(mins).All (tup => tup.Item1 < tup.Item2))
+                    //if (false)
+                    {
+
+                    }
+                    else
+                    {
+                        for (int j = 0; j < parsedCurrent.Count; j++)
+                        {
+                            mins[j] = (int)Math.Max(mins[j], parsedCurrent[j]);
+                        }
+                        visisted.Add(currentState);
+                        var next = m.Wiring.Select(w => ApplyWiringToJoltage(currentState, w)).Where(s => s != "").Select(n => (n, i + 1)).ToList();
+                        var alsoNext = next.Select(n => (Double(n.n), n.Item2 * 2)).Where(t => t.Item1 != "").ToList();
+                        // Console.WriteLine($"{here}  =>  {next.StrJoin(", ")}");
+                        foreach (var nextState in next.Concat(alsoNext))
+                            if (!hasBeenQueued.Contains(nextState.Item1))
+                            {
+                                hasBeenQueued.Add(nextState.Item1);
+                                queue.Enqueue(nextState, Distance(nextState.Item1));
+                            }
+                        // if (!hasBeenQueued.Contains(alsoNext) && alsoNext != "")
+                        // {
+                        //     hasBeenQueued.Add(alsoNext);
+                        //     queue.Enqueue((alsoNext, i * 2), Distance(alsoNext));
+                        // }
+                    }
+                }
+            }
+            return Int64.MaxValue;
+
+            string ApplyWiringToJoltage(string joltage, long[] wiring)
+            {
+                var parsedJoltage = joltage.Split(",").Select(Parse.Long).ToList();
+                foreach (var i in wiring)
+                    parsedJoltage[(int)i]++;
+                for (int i = 0; i < m.Joltage.Count; i++)
+                    if (parsedJoltage[i] > m.Joltage[i])
+                        return "";
+                return parsedJoltage.StrJoin(",");
+            }
+
+            string Double(string joltage)
+            {
+                var parsedJoltage = joltage.Split(",").Select(Parse.Long).ToList();
+                for(int i = 0; i < parsedJoltage.Count; i++)
+                    parsedJoltage[(int)i]*=2;
+                for (int i = 0; i < m.Joltage.Count; i++)
+                    if (parsedJoltage[i] > m.Joltage[i])
+                        return "";
+                return parsedJoltage.StrJoin(",");
+            }
+
+            long Distance(string joltage)
+            {
+                var parsedJoltage = joltage.Split(",").Select(Parse.Long).ToList();
+                if (parsedJoltage.Zip(m.Joltage).Any(tup => tup.Item1 > tup.Item2))
+                    return 9999999;
+                //return (int)Math.Floor(Math.Sqrt(parsedJoltage.Zip(m.Joltage).Select(tup => (tup.Item1 - tup.Item2)*(tup.Item1 - tup.Item2)).Sum()));
+                return parsedJoltage.Zip(m.Joltage).Select(tup => Math.Abs(tup.Item1 - tup.Item2)).Sum();
+            }
         }
 
         (string, string) ApplyMultipleWirings((string, string) indicatorAndJoltage, List<long[]> wiring)
