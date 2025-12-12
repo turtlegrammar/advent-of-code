@@ -66,7 +66,7 @@ public static class Day10
         public long Sum { get; set; }
         public List<Variable> Variables { get; set; }
     }
-    public record ConstraintSystem(List<Equation2> Equations, Dictionary<char, long> MaxValues, List<char> OrderedVariables);
+    public record ConstraintSystem(List<Equation2> Equations, Dictionary<char, long> MaxValues, List<char> OrderedVariables, long MinimumSolution);
 
     public record Machine(string TargetState, List<long[]> Wiring, List<long> Joltage);
 
@@ -181,45 +181,39 @@ public static class Day10
             return $"{eq.Variables.Select(v => $"{Coefficient(v.Coefficient)}{v.Name}").StrJoin(" + ")} = {eq.Sum}";
         }
 
-        Dictionary<char, (long, long)> RefineConstraints(Dictionary<char, (long, long)> starting, ConstraintSystem system)
+        (bool Valid, Dictionary<char, (long, long)> Constraints) RefineConstraints(Dictionary<char, (long, long)> starting, ConstraintSystem system)
         {
             // return Go(Go(Go(Go(starting))));
             var last = starting;
             do
             {
-                var next = Go(last);
-                if (next.All(kvp => last[kvp.Key] == kvp.Value))
-                    return next;
+                var (valid, next) = Go(last);
+                if (!valid)
+                    return (valid, next);
+                else if (next.All(kvp => last[kvp.Key] == kvp.Value))
+                    return (true, next);
                 else
                     last = next;
             } while (true);
 
-            Dictionary<char, (long, long)> Go(Dictionary<char, (long, long)> starting)
+            (bool Valid, Dictionary<char, (long, long)> Constraints) Go(Dictionary<char, (long, long)> starting)
             {
                 var result = starting.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 foreach (var equation in system.Equations)
                 {
-                    if (equation.Sum < 0) continue;
                     foreach (var v in equation.Variables)
                     {
-                        // if (v.Coefficient < 0 || equation.Sum <= 0) continue;
                         var newMin = (equation.Sum - equation.Variables.Where(vv => vv != v)
-                            .Select(vv => vv.Coefficient > 0 
-                                ? result[vv.Name].Item2*vv.Coefficient
-                                : result[vv.Name].Item1*vv.Coefficient
-                                ).Sum())/v.Coefficient;
-                        if (newMin < 0) newMin = 0;
+                            .Select(vv => result[vv.Name].Item2).Sum());
                         var newMax = (equation.Sum - equation.Variables.Where(vv => vv != v)
-                            .Select(vv => 
-                                vv.Coefficient > 0
-                                ? result[vv.Name].Item1*vv.Coefficient
-                                : result[vv.Name].Item2 * vv.Coefficient).Sum())/v.Coefficient;
-                        if (newMax > starting[v.Name].Item2) newMax = starting[v.Name].Item2;
+                            .Select(vv => result[vv.Name].Item1).Sum());
                         if (newMin <= newMax)
                             result[v.Name] = ConstrainRange(result[v.Name], (newMin, newMax));
+                        else
+                            return (false, result);
                     }
                 }
-                return result;
+                return (true, result);
             }
 
             (long, long) ConstrainRange((long, long) r1, (long, long) r2) =>
@@ -246,7 +240,7 @@ public static class Day10
             // Console.WriteLine($"Going to solve {i}");
             // system.Equations.Select(Equation2ToString).ForEach(Console.WriteLine);
 
-            var (solutions, iterations) = SolveConstraint(system);
+            var (solutions, iterations) = ParallelSolveConstraint(system).Result;
             var bestSolution = solutions.MinBy(s => s.Values.Sum());
             Console.WriteLine($"{i} - Solution: {bestSolution.Values.Sum()}; Iterations: {iterations}\n");
             return bestSolution.Values.Sum();
@@ -255,10 +249,26 @@ public static class Day10
             // Console.WriteLine(bestSolution.Values.Sum());
         }
 
-        (List<Dictionary<char, long>> Solutions, long Iterations) SolveConstraint(ConstraintSystem system)
+        async Task<(List<Dictionary<char, long>> Solutions, long Iterations)> ParallelSolveConstraint(ConstraintSystem system)
+        {
+            var cts = new CancellationTokenSource();
+            var attempts = Enumerable.Range(0, 10).Select(i => Task.Run(() => SolveConstraint(system, cts.Token, i != 0))).ToList();
+            var firstResult = await await Task.WhenAny(attempts);
+            cts.Cancel();
+            return firstResult;
+        }
+
+        (List<Dictionary<char, long>> Solutions, long Iterations) SolveConstraint(ConstraintSystem system, CancellationToken? ct = null, bool shuffle = false)
         {
             // var variables = system.Equations.SelectMany(e => e.Variables.Select(v => v.Name)).Distinct().Order().ToList(); // system.MaxValues.Keys.Order().ToList();
-            var variables = system.OrderedVariables;
+            // var variables = system.OrderedVariables;
+            var variables = 
+                system.Equations.SelectMany(e => e.Variables.Select(v => v.Name))
+                    .Distinct()
+                    .OrderByDescending(v => system.Equations.Where(e => e.Variables.Any(ev => ev.Name == v)).Count())
+                    .ToArray();
+            if (shuffle)
+                variables.Shuffle();
             // Console.WriteLine(variables.StrJoin(", "));
             var state = new Dictionary<char, long>();
             var cursor = 0;
@@ -267,14 +277,18 @@ public static class Day10
             var bestSolutionThusFar = Int64.MaxValue;
             var constraints = system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value));
 
-            while (cursor >= 0)
+            while (cursor >= 0 && !(ct.HasValue && ct.Value.IsCancellationRequested))
             {
                 var stateCopy = state.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                if (cursor < variables.Count && stateCopy.ContainsKey(variables[cursor]))
-                    stateCopy.Remove(variables[cursor]);
+                var merge = new Dictionary<char, (long, long)>();
+                if (cursor < variables.Length && stateCopy.ContainsKey(variables[cursor]))
+                    merge[variables[cursor]] = (stateCopy[variables[cursor]], system.MaxValues[variables[cursor]]);
+                    // stateCopy[variables[cursor]] = stateCopy.Remove(variables[cursor]);
                 var redoneConstraints = system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
-                        .MergeWith(stateCopy.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right);
-                constraints = RefineConstraints(redoneConstraints, system);
+                        .MergeWith(stateCopy.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right)
+                        .MergeWith(merge, (left, right) => right);
+                var (constraintsValid, constraintsX) = RefineConstraints(redoneConstraints, system);
+                constraints = constraintsX;
                 // constraints = RefineConstraints(system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
                 //         .MergeWith(state.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right), system);
                 if (iterations % 10000 == 0)
@@ -294,23 +308,30 @@ public static class Day10
                 }
 
                 iterations++;
-                if (NeedToBackTrack(out var reason))
+                if (NeedToBackTrack(constraintsValid, out var reason))
                 {
                     // Can we increase the current cursor?
                     // If so, do it, and move on.
                     // Otherwise, remove this, increment the last cursor.
                     // Console.WriteLine($"Backtracking: {reason} ");
-                    if (cursor < variables.Count)
+                    if (cursor < variables.Length)
                     {
-                        if (state.ContainsKey(variables[cursor]))
-                        {
-                            var stateCopy2 = state.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                            stateCopy2.Remove(variables[cursor]);
-                            var redoneConstraints2 = system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
-                                    .MergeWith(stateCopy2.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right);
-                            constraints = RefineConstraints(redoneConstraints2, system);
-                        }
-                        if (state.ContainsKey(variables[cursor]) && state[variables[cursor]] <= constraints[variables[cursor]].Item2)
+                        // if (state.ContainsKey(variables[cursor]))
+                        // {
+                        //     var stateCopy2 = state.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                        //     stateCopy2.Remove(variables[cursor]);
+                        //     var redoneConstraints2 = system.MaxValues.ToDictionary(kvp => kvp.Key, kvp => (0L, kvp.Value))
+                        //             .MergeWith(stateCopy2.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value, kvp.Value)), (left, right) => right);
+                        //     var (_, constraints2) = RefineConstraints(redoneConstraints2, system);
+                        //     constraints = constraints2;
+                        // }
+                        if (
+                            state.ContainsKey(variables[cursor]) 
+                            && state[variables[cursor]] < constraints[variables[cursor]].Item2
+                            && state.Values.Sum() < bestSolutionThusFar
+                            && system.Equations.All(eq => MaximumBoundEq(eq) < eq.Sum || MinimumBoundEq(eq) > eq.Sum)
+                            && PossibleToEventuallyReachSolution()
+                            )
                         {
                             state[variables[cursor]] = Math.Max(state[variables[cursor]] + 1, constraints[variables[cursor]].Item1);
                             // Console.WriteLine($"Set {variables[cursor]} = {state[variables[cursor]]}");
@@ -328,7 +349,7 @@ public static class Day10
                             }
                         }
                     }
-                    else if (cursor >= variables.Count)
+                    else if (cursor >= variables.Length)
                     {
                         cursor--;
                     }
@@ -345,20 +366,32 @@ public static class Day10
                         state[variables[cursor]] = constraints[variables[cursor]].Item1;
                     // Console.WriteLine($"Set {variables[cursor]} = {state[variables[cursor]]}");
                     cursor++;
+                    // var newOrder =
+                    //     variables.Take(cursor).Concat(variables.Skip(cursor).OrderByDescending(v => constraints[v].Item1)).ToList();
+                    // variables = newOrder;
+                     // variables.OrderBy( variables.Sort(cursor, variables.Count-cursor, x => (constraints[x].Item2-constraints[x].Item1));
                     // if (cursor < variables.Count)
                 }
             }
 
             return (solutions, iterations);
 
-            bool NeedToBackTrack(out string reason)
+            bool PossibleToEventuallyReachSolution() =>
+                (state.Values.Sum() + variables.Skip(cursor).Select(v => constraints[v].Item2).Sum()) >= system.MinimumSolution;
+
+            bool NeedToBackTrack(bool constraintsValid, out string reason)
             {
-                if (cursor >= variables.Count)
+                if (cursor >= variables.Length)
                 {
                     reason = "Cursor exceeds variable count";
                     return true;
                 }
-                else if (!ConstraintsValid(constraints))
+                else if (!PossibleToEventuallyReachSolution())
+                {
+                    reason = "Impossible to allocate resources given max values that would reach the minimum solution.";
+                    return true;
+                }
+                else if (!constraintsValid || !ConstraintsValid(constraints))
                 {
                     reason = "Constraints invalid";
                     return true;
@@ -418,7 +451,9 @@ public static class Day10
                     .OrderByDescending(v => equations.Where(e => e.Variables.Any(ev => ev.Name == v)).Count())
                     .ToList();
 
-            return new (equations, maxes, variablesFromMostToLeastPowerful);
+            var minimumSolution = m.Joltage.Max();
+
+            return new (equations, maxes, variablesFromMostToLeastPowerful, minimumSolution);
 
             long[] GenVector(long[] wiring)
             {

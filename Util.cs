@@ -38,6 +38,18 @@ public static class Extensions
     public static T RandomElement<T>(this List<T> coll) =>
         coll[_random.Next(0, coll.Count)];
 
+    public static void Shuffle<T>(this T[] array)
+    {
+        int n = array.Length;
+        while (n > 1) {
+            n--;
+            int k = _random.Next(n + 1);
+            T value = array[k];
+            array[k] = array[n];
+            array[n] = value;
+        }
+    }
+
     public static string StrJoin<T>(this IEnumerable<T> coll, string join = "") =>
         String.Join(join, coll.Select(x => x.ToString()));
 
