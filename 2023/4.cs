@@ -9,7 +9,7 @@ public static class Day4
 {
     public static (long, long) Run(string file)
     {
-        var parse = FileLines(Splitter("|", IntList).Tuple(IntSubList(0).Skipping(1), IntSubList(1)));
+        var parse = FileLines(Splitter("|", s => s.IntList()).Tuple(IntSubList(0).Skipping(1), IntSubList(1)));
         var cards = parse(file);
 
         var part1 = cards.Select(c => 

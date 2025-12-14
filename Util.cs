@@ -243,6 +243,24 @@ public static class Extensions
             result = result.MergeWith(d, merge);
         return result;
     }
+
+    public static List<List<T>> ChunkBy<T>(this IEnumerable<T> coll, Func<T, bool> isSeparator)
+    {
+        var chunks = new List<List<T>>();
+        var currentChunk = new List<T>();
+        foreach (var x in coll)
+        {
+            if (isSeparator(x))
+            {
+                chunks.Add(currentChunk);
+                currentChunk = new List<T>();
+            }
+            else
+                currentChunk.Add(x);
+        }
+        chunks.Add(currentChunk);
+        return chunks;
+    }
 }
 
 public record Option<T>
@@ -379,17 +397,29 @@ public class Matrix<T>(T[][] array, T _null)
 
 public static class ParseC
 {
-    public static long Long(string s) =>
+    public static long Long(this string s) =>
         new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
 
-    public static int Int(string s) =>
+    public static int Int(this string s) =>
         new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToArray()[0];
 
-    public static List<long> LongList(string s) =>
+    public static List<long> LongList(this string s) =>
         new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToList();
 
-    public static List<int> IntList(string s) =>
+    public static List<int> IntList(this string s) =>
         new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToList();
+
+    public static Func<A, long> Long<A>(this Func<A, string> fs) =>
+        s => new Regex("\\d+").Matches(fs(s)).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
+
+    public static Func<A, int> Int<A>(this Func<A, string> fs) =>
+        s => new Regex("\\d+").Matches(fs(s)).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToArray()[0];
+
+    public static Func<A, List<long>> LongList<A>(this Func<A, string> fs) =>
+        s => new Regex("\\d+").Matches(fs(s)).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToList();
+
+    public static Func<A, List<long>> IntList<A>(this Func<A, string> fs) =>
+        s => new Regex("\\d+").Matches(fs(s)).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToList();
 
     public static Func<string, (A, B)> Tuple<T, A, B>(this Func<string, T> init, Func<T, A> f, Func<T, B> g) =>
         s => {var x = init(s); return (f(x), g(x)); };
@@ -401,6 +431,9 @@ public static class ParseC
     public static Func<List<List<int>>, List<int>> IntSubList(int index) => x => x[index];
     public static Func<List<List<int>>, List<int>> LongSubList(int index) => x => x[index];
 
+    public static Func<List<A>, A> FirstLine<A>() => lines => lines[0];
+    public static Func<List<string>, string> FirstString() => lines => lines[0];
+
     public static Func<A, List<B>> Skipping<A, B>(this Func<A, List<B>> f, int skip) =>
         x => f(x).Skip(skip).ToList();
 
@@ -408,6 +441,19 @@ public static class ParseC
         file => File.ReadAllLines(file).Select(fLine).ToList();
 
     public static Func<A, C> Compose<A, B, C>(this Func<A, B> f, Func<B, C> g) => x => g(f(x));
+
+    public static Func<string, List<T>> FileBlocks<T>(Func<List<string>, T> blockF) => f =>
+    {
+        var blocks = File.ReadAllLines(f).ChunkBy(s => s == "");
+        return blocks.Select(blockF).ToList();
+    };
+
+    public static Func<string, (List<A>, List<B>)> FileBlocks2<A, B>(Func<List<string>, bool> isA, Func<List<string>, A> blockA, Func<List<string>, B> blockB) => f =>
+    {
+        var blocks = File.ReadAllLines(f).ChunkBy(s => s == "");
+        var (aBlocks, bBlocks) = blocks.Partition(isA);
+        return (aBlocks.Select(blockA).ToList(), bBlocks.Select(blockB).ToList());
+    };
 }
 
 public static class Parse
