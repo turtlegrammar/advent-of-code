@@ -23,7 +23,6 @@ public static class Day2
 
         var part2 = games.Select(g => g.Draws.MergeWith((x, y) => Math.Max(x, y)).Values.Aggregate((x, y) => x * y)).Sum();
 
-
         return (part1.Sum(), part2);
 
         Game ParseGame(string line)
@@ -38,7 +37,8 @@ public static class Day2
                     Regex.Matches(d, "(\\d+ [a-z]+)")
                     .Select(m => m.Value.Split(" ").Pipe(s => (s[1], Parse.Int(s[0]))))
                     .ToDictionary())
-                    .ToList());
+                .ToList()
+            );
         }
     } 
 }

@@ -377,6 +377,39 @@ public class Matrix<T>(T[][] array, T _null)
     }
 }
 
+public static class ParseC
+{
+    public static long Long(string s) =>
+        new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToArray()[0];
+
+    public static int Int(string s) =>
+        new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToArray()[0];
+
+    public static List<long> LongList(string s) =>
+        new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int64.Parse(v.Value)).ToList();
+
+    public static List<int> IntList(string s) =>
+        new Regex("\\d+").Matches(s).Select(v => v.Value == "" ? 0 : Int32.Parse(v.Value)).ToList();
+
+    public static Func<string, (A, B)> Tuple<T, A, B>(this Func<string, T> init, Func<T, A> f, Func<T, B> g) =>
+        s => {var x = init(s); return (f(x), g(x)); };
+
+    public static Func<string, List<T>> Splitter<T>(string split, Func<string, T> f) =>
+        x => x.Split(split).Select(f).ToList();
+
+    public static Func<List<T>, T> Index<T>(int index) => x => x[index];
+    public static Func<List<List<int>>, List<int>> IntSubList(int index) => x => x[index];
+    public static Func<List<List<int>>, List<int>> LongSubList(int index) => x => x[index];
+
+    public static Func<A, List<B>> Skipping<A, B>(this Func<A, List<B>> f, int skip) =>
+        x => f(x).Skip(skip).ToList();
+
+    public static Func<string, List<T>> FileLines<T>(Func<string, T> fLine) => 
+        file => File.ReadAllLines(file).Select(fLine).ToList();
+
+    public static Func<A, C> Compose<A, B, C>(this Func<A, B> f, Func<B, C> g) => x => g(f(x));
+}
+
 public static class Parse
 {
     public static int Int(string s) =>
