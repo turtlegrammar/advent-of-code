@@ -111,6 +111,7 @@ public static class Day10
 
         long MinimumSumOfSolutionToConstraintSystem(ConstraintSystem system, int i = 0)
         {
+            // This provides > 10x speed up for some systems
             MakeBasicExtrapolationsFromEquations(system.Equations);
             // system.Equations.Select(Equation2ToString).ForEach(Console.WriteLine);
 
